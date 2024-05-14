@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace HopiBot.LCU
 {
-    public class ClientApi
+    public static class ClientApi
     {
         public static async Task<bool> CreateBotLobby()
         {
@@ -17,7 +17,7 @@ namespace HopiBot.LCU
                 isCustom = "false",
                 queueId = 890,
             };
-            await LcuManager.PostAsync("/lol-lobby/v2/lobby", gameConfig);
+            await LcuManager.Instance.PostAsync("/lol-lobby/v2/lobby", gameConfig);
             return true;
         }
 
@@ -44,13 +44,13 @@ namespace HopiBot.LCU
                     },
                 isCustom = true
             };
-            await LcuManager.PostAsync("/lol-lobby/v2/lobby", gameConfig);
+            await LcuManager.Instance.PostAsync("/lol-lobby/v2/lobby", gameConfig);
             return true;
         }
 
         public static async Task<bool> SearchMath()
         {
-            await LcuManager.PostAsync("/lol-lobby/v2/lobby/matchmaking/search");
+            await LcuManager.Instance.PostAsync("/lol-lobby/v2/lobby/matchmaking/search");
             return true;
         }
 
@@ -70,25 +70,25 @@ namespace HopiBot.LCU
         /// <returns></returns>
         public static async Task<string> GetGameStatus()
         {
-            var response = await LcuManager.GetAsync("/lol-gameflow/v1/gameflow-phase");
+            var response = await LcuManager.Instance.GetAsync("/lol-gameflow/v1/gameflow-phase");
             return JsonConvert.DeserializeObject<string>(response.Content);
         }
 
         public static async Task<bool> Accept()
         {
-            var response = await LcuManager.PostAsync("/lol-matchmaking/v1/ready-check/accept");
+            var response = await LcuManager.Instance.PostAsync("/lol-matchmaking/v1/ready-check/accept");
             return true;
         }
 
         public static async Task<bool> PlayAgain()
         {
-            var response = await LcuManager.PostAsync("/lol-lobby/v2/play-again");
+            var response = await LcuManager.Instance.PostAsync("/lol-lobby/v2/play-again");
             return true;
         }
 
         public static async Task<bool> ChampSelect(int champId)
         {
-            var response = await LcuManager.GetAsync("/lol-champ-select/v1/session");
+            var response = await LcuManager.Instance.GetAsync("/lol-champ-select/v1/session");
             var session = JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Content);
             var actions = (JArray)session["actions"];
             var localPlayerCellId = session["localPlayerCellId"].ToString();
@@ -105,7 +105,7 @@ namespace HopiBot.LCU
                         type = "pick",
                         championId = champId
                     };
-                    await LcuManager.PatchAsync($"/lol-champ-select/v1/session/actions/{action["id"]}", body);
+                    await LcuManager.Instance.PatchAsync($"/lol-champ-select/v1/session/actions/{action["id"]}", body);
                     return true;
                 }
             }
@@ -115,7 +115,7 @@ namespace HopiBot.LCU
 
         public static async Task<List<Champion>> GetAllChampions()
         {
-            var response = await LcuManager.GetAsync("/lol-game-data/assets/v1/champion-summary.json");
+            var response = await LcuManager.Instance.GetAsync("/lol-game-data/assets/v1/champion-summary.json");
             return JsonConvert.DeserializeObject<List<Champion>>(response.Content);
         }
     }

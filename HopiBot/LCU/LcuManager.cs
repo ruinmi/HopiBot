@@ -7,11 +7,18 @@ namespace HopiBot.LCU
 {
     public class LcuManager
     {
-        public static string Port;
-        public static string Token;
-        public static RestClient Client;
+        public static LcuManager Instance = new LcuManager();
 
-        public static void Load()
+        private string _port;
+        private string _token;
+        private RestClient _client;
+
+        private LcuManager()
+        {
+            Load();
+        }
+
+        private void Load()
         {
             var query = new SelectQuery("SELECT CommandLine FROM Win32_Process WHERE Name = 'LeagueClientUx.exe'");
             using (var searcher = new ManagementObjectSearcher(query))
@@ -25,44 +32,44 @@ namespace HopiBot.LCU
                     {
                         if (argument.Contains("--remoting-auth-token="))
                         {
-                            Token = argument.Split('=')[1].Replace("\"", "");
+                            _token = argument.Split('=')[1].Replace("\"", "");
                         }
                         else if (argument.Contains("--app-port="))
                         {
-                            Port = argument.Split('=')[1].Replace("\"", "");
+                            _port = argument.Split('=')[1].Replace("\"", "");
                         }
                     }
                 }
             }
 
-            var options = new RestClientOptions($"https://127.0.0.1:{LcuManager.Port}")
+            var options = new RestClientOptions($"https://127.0.0.1:{_port}")
             {
-                Authenticator = new HttpBasicAuthenticator("riot", LcuManager.Token),
+                Authenticator = new HttpBasicAuthenticator("riot", _token),
                 RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true
             };
-            Client = new RestClient(options);
+            _client = new RestClient(options);
         }
 
-        public static async Task<RestResponse> GetAsync(string path)
+        public async Task<RestResponse> GetAsync(string path)
         {
             var request = new RestRequest(path);
-            var response = await Client.GetAsync(request);
+            var response = await _client.GetAsync(request);
             return response;
         }
 
-        public static async Task<RestResponse> PostAsync(string path, object body = null)
+        public async Task<RestResponse> PostAsync(string path, object body = null)
         {
             var request = new RestRequest(path);
             if (body != null) request.AddBody(body);
-            var response = await Client.PostAsync(request);
+            var response = await _client.PostAsync(request);
             return response;
         }
 
-        public static async Task<RestResponse> PatchAsync(string path, object body = null)
+        public async Task<RestResponse> PatchAsync(string path, object body = null)
         {
             var request = new RestRequest(path);
             if (body != null) request.AddBody(body);
-            var response = await Client.PatchAsync(request);
+            var response = await _client.PatchAsync(request);
             return response;
         }
     }

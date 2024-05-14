@@ -5,8 +5,52 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HopiBot"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="280" Width="300" Background="Black" WindowStyle="None" AllowsTransparency="True"
+        WindowStartupLocation="CenterScreen"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
+        <!-- Close Button in the top-right corner -->
+        <Button Content="X" Width="30" Height="30" Background="Black" Foreground="White" FontSize="16" BorderBrush="Transparent"
+                FontWeight="Bold"
+                HorizontalAlignment="Right" VerticalAlignment="Top" Click="CloseButton_Click"
+                Margin="0,0,0,0" />
+
+        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="60,20,0,0">
+            <TextBlock Text="局数" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
+            <Grid Width="90" Margin="20,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Name="CurrRoundBlk" Text="0" Foreground="White" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,20,0"/>
+                <TextBlock Text="/" Foreground="White" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="1"/>
+                <TextBox Background="Transparent" CaretBrush="White" Foreground="White" BorderBrush="Transparent" Name="TotalRoundTb" Width="35" Text="10" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="20,0,0,0" Grid.Column="2"/>
+            </Grid>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="60,20,0,0">
+            <TextBlock Text="英雄" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
+            <ComboBox Name="ChampCb" Width="130" VerticalAlignment="Center" Margin="20,0,0,0" FontSize="20" IsEditable="True">
+                <ComboBoxItem Content="寒冰射手" />
+                <ComboBoxItem Content="df" />
+                <!-- Add more ComboBoxItems as needed -->
+            </ComboBox>
+        </StackPanel>
+
+        <Button Name="StartupBtn" Content="启动" Width="100" Height="40" Background="#333333" Foreground="White" FontSize="16"
+                FontWeight="Bold"
+                HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Row="3" Grid.Column="0" Margin="0,0,0,40"
+                BorderBrush="White" BorderThickness="2" Click="StartupBtn_OnClick"/>
     </Grid>
 </Window>
