@@ -103,10 +103,12 @@
             <DependentUpon>App.xaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
+        <Compile Include="Game\GameService.cs" />
         <Compile Include="LCU\bo\Champion.cs" />
-        <Compile Include="LCU\GameService.cs" />
+        <Compile Include="LCU\GameApi.cs" />
         <Compile Include="LCU\LcuManager.cs" />
         <Compile Include="LCU\ClientApi.cs" />
+        <Compile Include="Logger.cs" />
         <Compile Include="MainWindow.xaml.cs">
             <DependentUpon>MainWindow.xaml</DependentUpon>
             <SubType>Code</SubType>

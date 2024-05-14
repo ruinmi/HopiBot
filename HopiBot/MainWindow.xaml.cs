@@ -2,15 +2,21 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using HopiBot.Game;
 using HopiBot.LCU;
+using HopiBot.LCU.bo;
+using Newtonsoft.Json;
+using Keyboard = HopiBot.Game.Keyboard;
 
 namespace HopiBot
 {
     public partial class MainWindow
     {
-        public Timer AcceptTimer;
+        public Timer SearchTimer;
         public Timer ChampSelectTimer;
-        public Timer GameTimer;
+        public Timer AcceptTimer;
+        public Timer PlayAgainTimer;
+        public Timer GameStatusTimer;
 
         public MainWindow()
         {
@@ -18,14 +24,29 @@ namespace HopiBot
             Init();
         }
 
-        private void Init()
+        private async void Init()
         {
-            AcceptTimer = new Timer(AutoAcceptMatch, null, Timeout.Infinite, Timeout.Infinite);
+            SearchTimer = new Timer(AutoSearch, null, Timeout.Infinite, Timeout.Infinite);
             ChampSelectTimer = new Timer(AutoChampSelect, null, Timeout.Infinite, Timeout.Infinite);
-            GameTimer = new Timer(AutoGame, null, 0, 1000);
+            AcceptTimer = new Timer(AutoAccept, null, Timeout.Infinite, Timeout.Infinite);
+            PlayAgainTimer = new Timer(AutoPlayAgain, null, Timeout.Infinite, Timeout.Infinite);
+            GameStatusTimer = new Timer(GameStatusListening, null, 0, 1000);
+
+            var champs = await ClientApi.GetAllChampions();
+            ChampCb.ItemsSource = champs;
+            ChampCb.SelectedItem = champs.Find(c => c.Name == "寒冰射手");
         }
 
-        private async void AutoAcceptMatch(object state)
+        private async void AutoSearch(object state)
+        {
+            if (await ClientApi.GetGameStatus() == "Lobby")
+            {
+                await ClientApi.SearchMath();
+                SearchTimer.Change(Timeout.Infinite, 0);
+            }
+        }
+
+        private async void AutoAccept(object state)
         {
             if (await ClientApi.GetGameStatus() == "ReadyCheck")
             {
@@ -36,20 +57,92 @@ namespace HopiBot
 
         private async void AutoChampSelect(object state)
         {
+            Champion champ = null;
             if (await ClientApi.GetGameStatus() == "ChampSelect")
             {
-                await ClientApi.ChampSelect(22);
+                // 使用Dispatcher来访问UI元素
+                await Application.Current.Dispatcher.InvokeAsync(() => { champ = (Champion)ChampCb.SelectedItem; });
+
+                if (champ != null)
+                {
+                    var suc = await ClientApi.ChampSelect(champ.Id);
+                    if (!suc)
+                    {
+                        // 同样使用Dispatcher来显示消息框
+                        Application.Current.Dispatcher.InvokeAsync(() => { MessageBox.Show("选英雄失败"); });
+                    }
+                }
+                else
+                {
+                    // 同样使用Dispatcher来显示消息框
+                    Application.Current.Dispatcher.InvokeAsync(() => { MessageBox.Show("未选中任何英雄"); });
+                }
                 ChampSelectTimer.Change(Timeout.Infinite, 0);
             }
         }
 
-        private async void AutoGame(object state)
+        private async void AutoPlayAgain(object state)
         {
-            if (await ClientApi.GetGameStatus() == "WaitingForStats")
+            var status = await ClientApi.GetGameStatus();
+            if (status == "EndOfGame")
             {
-                CurrRoundBlk.Text = (int.Parse(CurrRoundBlk.Text) + 1).ToString();
-                await ClientApi.PlayAgain();
-                MessageBox.Show("当前局数: " + CurrRoundBlk.Text + " / " + TotalRoundTb.Text);
+                Dispatcher.Invoke(() =>
+                {
+                    CurrRoundBlk.Text = (int.Parse(CurrRoundBlk.Text) + 1).ToString();
+                });
+                if (!await ClientApi.PlayAgain())
+                {
+                    MessageBox.Show("游戏结束, 重开失败！");
+                }
+                PlayAgainTimer.Change(Timeout.Infinite, 0);
+            }
+        }
+
+        private async void GameStatusListening(object state)
+        {
+            var status = await ClientApi.GetGameStatus();
+            Dispatcher.Invoke(() =>
+            {
+                GameStatusBlk.Text = status;
+            });
+            switch (status)
+            {
+                case "None":
+                    break;
+                case "Lobby":
+                    SearchTimer.Change(0, 1000);
+                    break;
+                case "Matchmaking":
+                    AcceptTimer.Change(0, 1000);
+                    break;
+                case "ReadyCheck":
+                    ChampSelectTimer.Change(0, 1000);
+                    break;
+                case "ChampSelect":
+                    break;
+                case "InProgress":
+                    if (!GameService.Instance.IsRunning)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            var ent = await GameApi.GetGameEvent();
+                            if (ent != null && ent.Contains("GameStart"))
+                            {
+                                GameService.Instance.Start();
+                            }
+                        });
+                    }
+
+                    break;
+                case "WaitingForStats":
+                    PlayAgainTimer.Change(0, 1000);
+                    _ = Task.Run(() =>
+                    {
+                        GameService.Instance.Stop();
+                    });
+                    break;
+                case "EndOfGame":
+                    break;
             }
         }
 
@@ -87,11 +180,7 @@ namespace HopiBot
             StartupBtn.Click += StopBtn_OnClick;
             _ = Task.Run(async () =>
             {
-                if (await ClientApi.CreateBotLobby() && await ClientApi.SearchMath())
-                {
-                    // AcceptTimer.Change(0, 1000);
-                    // ChampSelectTimer.Change(0, 1000);
-                }
+                await ClientApi.CreateBotLobby();
             });
         }
 
@@ -99,11 +188,9 @@ namespace HopiBot
         {
             TotalRoundTb.IsReadOnly = false;
             ChampCb.IsEnabled = true;
-            StartupBtn.Content = "启动";
+            StartupBtn.Content = "创建房间";
             StartupBtn.Click -= StopBtn_OnClick;
             StartupBtn.Click += StartupBtn_OnClick;
-            AcceptTimer.Change(Timeout.Infinite, 0);
-            ChampSelectTimer.Change(Timeout.Infinite, 0);
         }
     }
 }

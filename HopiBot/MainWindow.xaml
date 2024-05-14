@@ -7,6 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="280" Width="300" Background="Black" WindowStyle="None" AllowsTransparency="True"
         WindowStartupLocation="CenterScreen"
+        Topmost="True"
         MouseLeftButtonDown="Window_MouseLeftButtonDown">
     <Grid>
         <Grid.RowDefinitions>
@@ -42,9 +43,6 @@
         <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="60,20,0,0">
             <TextBlock Text="英雄" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
             <ComboBox Name="ChampCb" Width="130" VerticalAlignment="Center" Margin="20,0,0,0" FontSize="20" IsEditable="True">
-                <ComboBoxItem Content="寒冰射手" />
-                <ComboBoxItem Content="df" />
-                <!-- Add more ComboBoxItems as needed -->
             </ComboBox>
         </StackPanel>
 
@@ -52,5 +50,6 @@
                 FontWeight="Bold"
                 HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Row="3" Grid.Column="0" Margin="0,0,0,40"
                 BorderBrush="White" BorderThickness="2" Click="StartupBtn_OnClick"/>
+        <TextBlock Name="GameStatusBlk" Text="启动" Foreground="LawnGreen" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Row="0" Grid.Column="0" FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
     </Grid>
 </Window>

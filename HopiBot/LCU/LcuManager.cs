@@ -12,6 +12,7 @@ namespace HopiBot.LCU
         private string _port;
         private string _token;
         private RestClient _client;
+        private RestClient _gameClient;
 
         private LcuManager()
         {
@@ -48,16 +49,22 @@ namespace HopiBot.LCU
                 RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true
             };
             _client = new RestClient(options);
+
+            options = new RestClientOptions($"https://127.0.0.1:2999")
+            {
+                RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true
+            };
+            _gameClient = new RestClient(options);
         }
 
-        public async Task<RestResponse> GetAsync(string path)
+        public async Task<RestResponse> GetClient(string path)
         {
             var request = new RestRequest(path);
             var response = await _client.GetAsync(request);
             return response;
         }
 
-        public async Task<RestResponse> PostAsync(string path, object body = null)
+        public async Task<RestResponse> PostClient(string path, object body = null)
         {
             var request = new RestRequest(path);
             if (body != null) request.AddBody(body);
@@ -65,11 +72,37 @@ namespace HopiBot.LCU
             return response;
         }
 
-        public async Task<RestResponse> PatchAsync(string path, object body = null)
+        public async Task<RestResponse> PatchClient(string path, object body = null)
         {
             var request = new RestRequest(path);
             if (body != null) request.AddBody(body);
             var response = await _client.PatchAsync(request);
+            return response;
+        }
+
+        public async Task<RestResponse> GetGameClient(string path, int timeout = 0)
+        {
+            var request = new RestRequest(path);
+            if (timeout > 0) request.Timeout = timeout;
+            var response = await _gameClient.GetAsync(request);
+            return response;
+        }
+
+        public async Task<RestResponse> PostGameClient(string path, object body = null, int timeout = 0)
+        {
+            var request = new RestRequest(path);
+            if (body != null) request.AddBody(body);
+            if (timeout > 0) request.Timeout = timeout;
+            var response = await _gameClient.PostAsync(request);
+            return response;
+        }
+
+        public async Task<RestResponse> PatchGameClient(string path, object body = null, int timeout = 0)
+        {
+            var request = new RestRequest(path);
+            if (body != null) request.AddBody(body);
+            if (timeout > 0) request.Timeout = timeout;
+            var response = await _gameClient.PatchAsync(request);
             return response;
         }
     }
