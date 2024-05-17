@@ -1,153 +1,72 @@
 ﻿using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
+using Gma.System.MouseKeyHook;
 using HopiBot.Game;
 using HopiBot.LCU;
 using HopiBot.LCU.bo;
-using Newtonsoft.Json;
-using Keyboard = HopiBot.Game.Keyboard;
+using HopiBot.Enum;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
+using Timer = System.Timers.Timer;
 
 namespace HopiBot
 {
     public partial class MainWindow
     {
-        public Timer SearchTimer;
-        public Timer ChampSelectTimer;
-        public Timer AcceptTimer;
-        public Timer PlayAgainTimer;
-        public Timer GameStatusTimer;
+        private Timer _timer;
+        private Thread _botThread;
+        private Client _client;
 
         public MainWindow()
         {
             InitializeComponent();
             Init();
+            UpdateStatus();
         }
 
-        private async void Init()
+        private void Init()
         {
-            SearchTimer = new Timer(AutoSearch, null, Timeout.Infinite, Timeout.Infinite);
-            ChampSelectTimer = new Timer(AutoChampSelect, null, Timeout.Infinite, Timeout.Infinite);
-            AcceptTimer = new Timer(AutoAccept, null, Timeout.Infinite, Timeout.Infinite);
-            PlayAgainTimer = new Timer(AutoPlayAgain, null, Timeout.Infinite, Timeout.Infinite);
-            GameStatusTimer = new Timer(GameStatusListening, null, 0, 1000);
-
-            var champs = await ClientApi.GetAllChampions();
+            var champs = ClientApi.GetAllChampions();
             ChampCb.ItemsSource = champs;
-            ChampCb.SelectedItem = champs.Find(c => c.Name == "寒冰射手");
-        }
+            ChampCb.SelectedItem = champs.Find(c => c.Name == "麦林炮手");
 
-        private async void AutoSearch(object state)
-        {
-            if (await ClientApi.GetGameStatus() == "Lobby")
+            var hook = Hook.GlobalEvents();
+            hook.KeyDown += (sender, e) =>
             {
-                await ClientApi.SearchMath();
-                SearchTimer.Change(Timeout.Infinite, 0);
-            }
-        }
-
-        private async void AutoAccept(object state)
-        {
-            if (await ClientApi.GetGameStatus() == "ReadyCheck")
-            {
-                await ClientApi.Accept();
-                AcceptTimer.Change(Timeout.Infinite, 0);
-            }
-        }
-
-        private async void AutoChampSelect(object state)
-        {
-            Champion champ = null;
-            if (await ClientApi.GetGameStatus() == "ChampSelect")
-            {
-                // 使用Dispatcher来访问UI元素
-                await Application.Current.Dispatcher.InvokeAsync(() => { champ = (Champion)ChampCb.SelectedItem; });
-
-                if (champ != null)
+                if (e.KeyCode == Keys.F1)
                 {
-                    var suc = await ClientApi.ChampSelect(champ.Id);
-                    if (!suc)
-                    {
-                        // 同样使用Dispatcher来显示消息框
-                        Application.Current.Dispatcher.InvokeAsync(() => { MessageBox.Show("选英雄失败"); });
-                    }
+                    Stop();
                 }
-                else
-                {
-                    // 同样使用Dispatcher来显示消息框
-                    Application.Current.Dispatcher.InvokeAsync(() => { MessageBox.Show("未选中任何英雄"); });
-                }
-                ChampSelectTimer.Change(Timeout.Infinite, 0);
-            }
-        }
 
-        private async void AutoPlayAgain(object state)
-        {
-            var status = await ClientApi.GetGameStatus();
-            if (status == "EndOfGame")
-            {
-                Dispatcher.Invoke(() =>
+                if (e.KeyCode == Keys.U)
                 {
-                    CurrRoundBlk.Text = (int.Parse(CurrRoundBlk.Text) + 1).ToString();
-                });
-                if (!await ClientApi.PlayAgain())
-                {
-                    MessageBox.Show("游戏结束, 重开失败！");
-                }
-                PlayAgainTimer.Change(Timeout.Infinite, 0);
-            }
-        }
-
-        private async void GameStatusListening(object state)
-        {
-            var status = await ClientApi.GetGameStatus();
-            Dispatcher.Invoke(() =>
-            {
-                GameStatusBlk.Text = status;
-            });
-            switch (status)
-            {
-                case "None":
-                    break;
-                case "Lobby":
-                    SearchTimer.Change(0, 1000);
-                    break;
-                case "Matchmaking":
-                    AcceptTimer.Change(0, 1000);
-                    break;
-                case "ReadyCheck":
-                    ChampSelectTimer.Change(0, 1000);
-                    break;
-                case "ChampSelect":
-                    break;
-                case "InProgress":
-                    if (!GameService.Instance.IsRunning)
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
-                        _ = Task.Run(async () =>
-                        {
-                            var ent = await GameApi.GetGameEvent();
-                            if (ent != null && ent.Contains("GameStart"))
-                            {
-                                GameService.Instance.Start();
-                            }
-                        });
-                    }
-
-                    break;
-                case "WaitingForStats":
-                    PlayAgainTimer.Change(0, 1000);
-                    _ = Task.Run(() =>
-                    {
-                        GameService.Instance.Stop();
+                        // Controller.RightClick(new RatioPoint(double.Parse(Xtb.Text), double.Parse(Ytb.Text)));
+                        ClientApi.HonorPlayer();
                     });
-                    break;
-                case "EndOfGame":
-                    break;
-            }
+                }
+            };
+
+
+        }
+
+        private void UpdateStatus()
+        {
+            _timer = new Timer(1000); // 每5秒获取一次数据
+            _timer.Elapsed += (sender, e) =>
+            {
+                var phase = ClientApi.GetGamePhase();
+                Application.Current.Dispatcher.Invoke(() => GameStatusBlk.Text = phase.ToChinese());
+            };
+            _timer.Start();
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
+            _timer.Close();
             Close();
         }
 
@@ -161,36 +80,47 @@ namespace HopiBot
 
         private void StartupBtn_OnClick(object sender, RoutedEventArgs e)
         {
-            if (TotalRoundTb.Text == "")
+            if (_botThread == null)
             {
-                MessageBox.Show("请输入总局数");
-                return;
-            }
+                if (TotalRoundTb.Text == "")
+                {
+                    MessageBox.Show("请输入总局数");
+                    return;
+                }
 
-            if (ChampCb.SelectedIndex == -1)
-            {
-                MessageBox.Show("请选择英雄");
-                return;
-            }
+                if (ChampCb.SelectedIndex == -1)
+                {
+                    MessageBox.Show("请选择英雄");
+                    return;
+                }
 
-            TotalRoundTb.IsReadOnly = true;
-            ChampCb.IsEnabled = false;
-            StartupBtn.Content = "停止";
-            StartupBtn.Click -= StartupBtn_OnClick;
-            StartupBtn.Click += StopBtn_OnClick;
-            _ = Task.Run(async () =>
+                TotalRoundTb.IsReadOnly = true;
+                ChampCb.IsEnabled = false;
+                StartupBtn.Content = "停止";
+                _botThread = new Thread(() =>
+                {
+                    _client = new Client(this);
+                    Application.Current.Dispatcher.Invoke(() => { _client.Champ = (Champion) ChampCb.SelectedItem; });
+                    _client.Start();
+                });
+                _botThread.Start();
+            }
+            else
             {
-                await ClientApi.CreateBotLobby();
-            });
+                Stop();
+            }
         }
 
-        private void StopBtn_OnClick(object sender, RoutedEventArgs e)
+        public void Stop()
         {
             TotalRoundTb.IsReadOnly = false;
             ChampCb.IsEnabled = true;
-            StartupBtn.Content = "创建房间";
-            StartupBtn.Click -= StopBtn_OnClick;
-            StartupBtn.Click += StartupBtn_OnClick;
+            StartupBtn.Content = "启动";
+            _client?.Abort();
+            _botThread?.Abort();
+            _botThread?.Join();
+            _botThread = null;
         }
+
     }
 }

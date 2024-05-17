@@ -57,52 +57,52 @@ namespace HopiBot.LCU
             _gameClient = new RestClient(options);
         }
 
-        public async Task<RestResponse> GetClient(string path)
+        public RestResponse GetClient(string path)
         {
             var request = new RestRequest(path);
-            var response = await _client.GetAsync(request);
+            var response = _client.Get(request);
             return response;
         }
 
-        public async Task<RestResponse> PostClient(string path, object body = null)
-        {
-            var request = new RestRequest(path);
-            if (body != null) request.AddBody(body);
-            var response = await _client.PostAsync(request);
-            return response;
-        }
-
-        public async Task<RestResponse> PatchClient(string path, object body = null)
+        public RestResponse PostClient(string path, object body = null)
         {
             var request = new RestRequest(path);
             if (body != null) request.AddBody(body);
-            var response = await _client.PatchAsync(request);
+            var response = _client.Post(request);
             return response;
         }
 
-        public async Task<RestResponse> GetGameClient(string path, int timeout = 0)
+        public RestResponse PatchClient(string path, object body = null)
+        {
+            var request = new RestRequest(path);
+            if (body != null) request.AddBody(body);
+            var response = _client.Patch(request);
+            return response;
+        }
+
+        public RestResponse GetGameClient(string path, int timeout = 0)
         {
             var request = new RestRequest(path);
             if (timeout > 0) request.Timeout = timeout;
-            var response = await _gameClient.GetAsync(request);
+            var response = _gameClient.Get(request);
             return response;
         }
 
-        public async Task<RestResponse> PostGameClient(string path, object body = null, int timeout = 0)
-        {
-            var request = new RestRequest(path);
-            if (body != null) request.AddBody(body);
-            if (timeout > 0) request.Timeout = timeout;
-            var response = await _gameClient.PostAsync(request);
-            return response;
-        }
-
-        public async Task<RestResponse> PatchGameClient(string path, object body = null, int timeout = 0)
+        public RestResponse PostGameClient(string path, object body = null, int timeout = 0)
         {
             var request = new RestRequest(path);
             if (body != null) request.AddBody(body);
             if (timeout > 0) request.Timeout = timeout;
-            var response = await _gameClient.PatchAsync(request);
+            var response = _gameClient.Post(request);
+            return response;
+        }
+
+        public RestResponse PatchGameClient(string path, object body = null, int timeout = 0)
+        {
+            var request = new RestRequest(path);
+            if (body != null) request.AddBody(body);
+            if (timeout > 0) request.Timeout = timeout;
+            var response = _gameClient.Patch(request);
             return response;
         }
     }

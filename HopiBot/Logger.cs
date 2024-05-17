@@ -3,31 +3,18 @@ using System.IO;
 
 namespace HopiBot
 {
-    public class Logger
+    public static class Logger
     {
-        private string logFilePath;
-        private bool logToFile;
+        // log to desktop
+        private static string logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "HopiBot.log");
 
-        public Logger(string filePath = null)
-        {
-            logFilePath = filePath;
-            logToFile = !string.IsNullOrEmpty(filePath);
-        }
-
-        public void Log(string message)
+        public static void Log(string message)
         {
             string logMessage = $"{DateTime.Now} {message}";
-            if (logToFile)
-            {
-                WriteToFile(logMessage);
-            }
-            else
-            {
-                Console.WriteLine(logMessage);
-            }
+            WriteToFile(logMessage);
         }
 
-        private void WriteToFile(string message)
+        private static void WriteToFile(string message)
         {
             try
             {
@@ -42,7 +29,7 @@ namespace HopiBot
             }
         }
 
-        public void Log(string message, Exception ex)
+        public static void Log(string message, Exception ex)
         {
             string fullMessage = $"{message}\nException: {ex.Message}\nStack Trace: {ex.StackTrace}";
             Log(fullMessage);

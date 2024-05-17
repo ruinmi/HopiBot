@@ -35,6 +35,12 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
+        <Reference Include="Gma.System.MouseKeyHook, Version=5.7.1.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\MouseKeyHook.5.7.1\lib\net48\Gma.System.MouseKeyHook.dll</HintPath>
+        </Reference>
+        <Reference Include="InputManager, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\InputManager.1.0.0\lib\InputManager.dll</HintPath>
+        </Reference>
         <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
           <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.7.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
         </Reference>
@@ -55,6 +61,7 @@
         </Reference>
         <Reference Include="System.Core"/>
         <Reference Include="System.Data"/>
+        <Reference Include="System.Drawing" />
         <Reference Include="System.Management">
           <HintPath>C:\Users\elio\.nuget\packages\system.management\9.0.0-preview.3.24172.9\lib\netstandard2.0\System.Management.dll</HintPath>
         </Reference>
@@ -82,6 +89,7 @@
           <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
         </Reference>
         <Reference Include="System.Web" />
+        <Reference Include="System.Windows.Forms" />
         <Reference Include="System.Xml"/>
         <Reference Include="System.Xaml">
             <RequiredTargetFramework>4.0</RequiredTargetFramework>
@@ -103,7 +111,10 @@
             <DependentUpon>App.xaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
-        <Compile Include="Game\GameService.cs" />
+        <Compile Include="Enum\GamePhase.cs" />
+        <Compile Include="Game\Client.cs" />
+        <Compile Include="Game\Controller.cs" />
+        <Compile Include="Game\Game.cs" />
         <Compile Include="LCU\bo\Champion.cs" />
         <Compile Include="LCU\GameApi.cs" />
         <Compile Include="LCU\LcuManager.cs" />

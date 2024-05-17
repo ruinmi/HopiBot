@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using HopiBot.LCU.bo;
+using HopiBot.Enum;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -9,8 +11,7 @@ namespace HopiBot.LCU
 {
     public static class ClientApi
     {
-        private static Logger logger = new Logger("log.txt");
-        public static async Task<bool> CreateBotLobby()
+        public static bool CreateBotLobby()
         {
             var gameConfig = new
             {
@@ -19,11 +20,11 @@ namespace HopiBot.LCU
                 isCustom = "false",
                 queueId = 890,
             };
-            await LcuManager.Instance.PostClient("/lol-lobby/v2/lobby", gameConfig);
+            LcuManager.Instance.PostClient("/lol-lobby/v2/lobby", gameConfig);
             return true;
         }
 
-        public static async Task<bool> CreatePracticeLobby()
+        public static bool CreatePracticeLobby()
         {
             var gameConfig = new
             {
@@ -46,18 +47,18 @@ namespace HopiBot.LCU
                     },
                 isCustom = true
             };
-            await LcuManager.Instance.PostClient("/lol-lobby/v2/lobby", gameConfig);
+            LcuManager.Instance.PostClient("/lol-lobby/v2/lobby", gameConfig);
             return true;
         }
 
-        public static async Task<bool> SearchMath()
+        public static bool SearchMath()
         {
             try
             {
-                var response = await LcuManager.Instance.PostClient("/lol-lobby/v2/lobby/matchmaking/search", null);
+                var response = LcuManager.Instance.PostClient("/lol-lobby/v2/lobby/matchmaking/search", null);
             } catch (Exception e)
             {
-                logger.Log("search match: ", e);
+                Logger.Log("search match: ", e);
                 return false;
             }
             return true;
@@ -77,41 +78,48 @@ namespace HopiBot.LCU
         /// 等待重新连接:Reconnect
         /// </summary>
         /// <returns></returns>
-        public static async Task<string> GetGameStatus()
-        {
-            var response = await LcuManager.Instance.GetClient("/lol-gameflow/v1/gameflow-phase");
-            return JsonConvert.DeserializeObject<string>(response.Content);
-        }
-
-        public static async Task<bool> Accept()
+        public static GamePhase GetGamePhase()
         {
             try
             {
-                var response = await LcuManager.Instance.PostClient("/lol-matchmaking/v1/ready-check/accept");
+                var response = LcuManager.Instance.GetClient("/lol-gameflow/v1/gameflow-phase");
+                return JsonConvert.DeserializeObject<GamePhase>(response.Content);
             } catch (Exception e)
             {
-                logger.Log("accept: ", e);
+                Logger.Log("get game phase: ", e);
+                return GamePhase.None;
+            }
+        }
+
+        public static bool Accept()
+        {
+            try
+            {
+                var response = LcuManager.Instance.PostClient("/lol-matchmaking/v1/ready-check/accept");
+            } catch (Exception e)
+            {
+                Logger.Log("accept: ", e);
                 return false;
             }
             return true;
         }
 
-        public static async Task<bool> PlayAgain()
+        public static bool PlayAgain()
         {
             try
             {
-                var response = await LcuManager.Instance.PostClient("/lol-lobby/v2/play-again");
+                var response = LcuManager.Instance.PostClient("/lol-lobby/v2/play-again");
             } catch (Exception e)
             {
-                logger.Log("play again: ", e);
+                Logger.Log("play again: ", e);
                 return false;
             }
             return true;
         }
 
-        public static async Task<bool> ChampSelect(int champId)
+        public static bool ChampSelect(Champion champ)
         {
-            var response = await LcuManager.Instance.GetClient("/lol-champ-select/v1/session");
+            var response = LcuManager.Instance.GetClient("/lol-champ-select/v1/session");
             var session = JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Content);
             var actions = (JArray)session["actions"];
             var localPlayerCellId = session["localPlayerCellId"].ToString();
@@ -120,22 +128,22 @@ namespace HopiBot.LCU
                 var action = (JObject)a;
                 foreach (var keyValuePair in action)
                 {
-                    logger.Log($"{keyValuePair.Value}");
+                    Logger.Log($"{keyValuePair.Value}");
                     if (keyValuePair.Key != "actorCellId") continue;
                     if (localPlayerCellId != keyValuePair.Value.ToString()) continue;
                     var body = new
                     {
                         completed = true,
                         type = "pick",
-                        championId = champId
+                        championId = champ.Id
                     };
                     try
                     {
-                        await LcuManager.Instance.PatchClient($"/lol-champ-select/v1/session/actions/{action["id"]}", body);
+                        LcuManager.Instance.PatchClient($"/lol-champ-select/v1/session/actions/{action["id"]}", body);
                     }
                     catch (Exception e)
                     {
-                        logger.Log("champ select: ", e);
+                        Logger.Log("champ select: ", e);
                         return false;
                     }
                     return true;
@@ -145,9 +153,26 @@ namespace HopiBot.LCU
             return false;
         }
 
-        public static async Task<List<Champion>> GetAllChampions()
+        public static void HonorPlayer()
         {
-            var response = await LcuManager.Instance.GetClient("/lol-game-data/assets/v1/champion-summary.json");
+            try
+            {
+                var eligiblePlayers = JObject.Parse(LcuManager.Instance.GetClient("/lol-honor-v2/v1/ballot").Content)["eligiblePlayers"];
+                if (!eligiblePlayers.Any()) return;
+                var data = new {summonerId = eligiblePlayers[0]["summonerId"].ToObject<int>()};
+                Logger.Log(data.ToString());
+                LcuManager.Instance.PostClient("/lol-honor-v2/v1/honor-player", data);
+                Logger.Log("honor player: " + eligiblePlayers[0]["summonerId"]);
+            }
+            catch (Exception e)
+            {
+                Logger.Log("honor player: ", e);
+            }
+        }
+
+        public static List<Champion> GetAllChampions()
+        {
+            var response = LcuManager.Instance.GetClient("/lol-game-data/assets/v1/champion-summary.json");
             return JsonConvert.DeserializeObject<List<Champion>>(response.Content);
         }
     }
