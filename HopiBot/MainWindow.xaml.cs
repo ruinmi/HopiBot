@@ -45,7 +45,28 @@ namespace HopiBot
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         // Controller.RightClick(new RatioPoint(double.Parse(Xtb.Text), double.Parse(Ytb.Text)));
-                        ClientApi.HonorPlayer();
+                        // ClientApi.HonorPlayer();
+                        var puuid = "2fda0cc5-1374-547d-a67d-e8da9379a324";
+                        var matches = ClientApi.GetMatchesByPuuid(puuid);
+                        foreach (var match in matches)
+                        {
+                            var m = ClientApi.GetMatch(match.GameId);
+                            var participantId = 0;
+                            foreach (var mParticipantIdentity in m.ParticipantIdentities)
+                            {
+                                if (puuid == mParticipantIdentity.Player.Puuid)
+                                {
+                                    participantId = mParticipantIdentity.ParticipantId;
+                                }
+                            }
+                            foreach (var participant in m.Participants)
+                            {
+                                if (participantId == participant.ParticipantId)
+                                {
+                                    MessageBox.Show(participant.CalculateScore().ToString());
+                                }
+                            }
+                        }
                     });
                 }
             };

@@ -175,5 +175,18 @@ namespace HopiBot.LCU
             var response = LcuManager.Instance.GetClient("/lol-game-data/assets/v1/champion-summary.json");
             return JsonConvert.DeserializeObject<List<Champion>>(response.Content);
         }
+
+        public static Match GetMatch(long gameId)
+        {
+            var response = LcuManager.Instance.GetClient($"/lol-match-history/v1/games/{gameId}");
+            return JsonConvert.DeserializeObject<Match>(response.Content);
+        }
+
+        public static List<Match> GetMatchesByPuuid(string puuid)
+        {
+            var response = LcuManager.Instance.GetClient($"/lol-match-history/v1/products/lol/{puuid}/matches");
+            var matches = JsonConvert.DeserializeObject<List<Match>>(response.Content);
+            return matches;
+        }
     }
 }

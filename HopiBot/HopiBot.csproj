@@ -116,6 +116,7 @@
         <Compile Include="Game\Controller.cs" />
         <Compile Include="Game\Game.cs" />
         <Compile Include="LCU\bo\Champion.cs" />
+        <Compile Include="LCU\bo\Match.cs" />
         <Compile Include="LCU\GameApi.cs" />
         <Compile Include="LCU\LcuManager.cs" />
         <Compile Include="LCU\ClientApi.cs" />
