@@ -11,14 +11,39 @@ namespace HopiBot.LCU
 {
     public static class ClientApi
     {
-        public static bool CreateBotLobby()
+        public static bool CheckConnection()
         {
+            try
+            {
+                var response = LcuManager.Instance.GetClient("/lol-chat/v1/me");
+                return response.StatusCode == System.Net.HttpStatusCode.OK;
+            } catch
+            {
+                return false;
+            }
+        }
+
+        public static bool CreateBotLobby(int difficulty = 3)
+        {
+            var queueId = 0;
+            switch (difficulty)
+            {
+                case 1:
+                    queueId = 870;
+                    break;
+                case 2:
+                    queueId = 880;
+                    break;
+                case 3:
+                    queueId = 890;
+                    break;
+            }
             var gameConfig = new
             {
                 customLobbyName = "Custom Lobby",
                 gameMode = "CLASSIC",
                 isCustom = "false",
-                queueId = 890,
+                queueId,
             };
             LcuManager.Instance.PostClient("/lol-lobby/v2/lobby", gameConfig);
             return true;
@@ -83,7 +108,11 @@ namespace HopiBot.LCU
             try
             {
                 var response = LcuManager.Instance.GetClient("/lol-gameflow/v1/gameflow-phase");
-                return JsonConvert.DeserializeObject<GamePhase>(response.Content);
+                if (response?.Content != null)
+                {
+                    return JsonConvert.DeserializeObject<GamePhase>(response.Content);
+                }
+                return GamePhase.None;
             } catch (Exception e)
             {
                 Logger.Log("get game phase: ", e);
@@ -128,7 +157,6 @@ namespace HopiBot.LCU
                 var action = (JObject)a;
                 foreach (var keyValuePair in action)
                 {
-                    Logger.Log($"{keyValuePair.Value}");
                     if (keyValuePair.Key != "actorCellId") continue;
                     if (localPlayerCellId != keyValuePair.Value.ToString()) continue;
                     var body = new
@@ -159,7 +187,7 @@ namespace HopiBot.LCU
             {
                 var eligiblePlayers = JObject.Parse(LcuManager.Instance.GetClient("/lol-honor-v2/v1/ballot").Content)["eligiblePlayers"];
                 if (!eligiblePlayers.Any()) return;
-                var data = new {summonerId = eligiblePlayers[0]["summonerId"].ToObject<int>()};
+                var data = new {summonerId = eligiblePlayers[0]["summonerId"].ToObject<long>()};
                 Logger.Log(data.ToString());
                 LcuManager.Instance.PostClient("/lol-honor-v2/v1/honor-player", data);
                 Logger.Log("honor player: " + eligiblePlayers[0]["summonerId"]);
@@ -185,8 +213,30 @@ namespace HopiBot.LCU
         public static List<Match> GetMatchesByPuuid(string puuid)
         {
             var response = LcuManager.Instance.GetClient($"/lol-match-history/v1/products/lol/{puuid}/matches");
-            var matches = JsonConvert.DeserializeObject<List<Match>>(response.Content);
+            var m = JObject.Parse(response.Content);
+            var matches = JsonConvert.DeserializeObject<List<Match>>(m["games"]["games"].ToString());
             return matches;
         }
+
+        public static Summoner GetSummoner(string puuid)
+        {
+            var response = LcuManager.Instance.GetClient($"/lol-summoner/v2/summoners/puuid/{puuid}");
+            var summoner = JsonConvert.DeserializeObject<Summoner>(response.Content);
+            return summoner;
+        }
+
+        public static string GetMyPuuid()
+        {
+            var puuid = JObject.Parse(LcuManager.Instance.GetClient("/lol-chat/v1/me").Content)["puuid"];
+            return puuid.ToString();
+        }
+
+        public static int GetMyXp()
+        {
+            var puuid = GetMyPuuid();
+            var xp = JObject.Parse(LcuManager.Instance.GetClient($"/lol-summoner/v2/summoners/puuid/{puuid}").Content)["xpSinceLastLevel"];
+            return xp.ToObject<int>();
+        }
+
     }
 }

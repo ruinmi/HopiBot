@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
-            Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
+    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -52,15 +51,15 @@
         <Reference Include="RestSharp, Version=110.2.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
           <HintPath>..\packages\RestSharp.110.2.0\lib\net471\RestSharp.dll</HintPath>
         </Reference>
-        <Reference Include="System"/>
+        <Reference Include="System" />
         <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
           <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
         </Reference>
         <Reference Include="System.CodeDom, Version=9.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
           <HintPath>..\packages\System.CodeDom.9.0.0-preview.3.24172.9\lib\net462\System.CodeDom.dll</HintPath>
         </Reference>
-        <Reference Include="System.Core"/>
-        <Reference Include="System.Data"/>
+        <Reference Include="System.Core" />
+        <Reference Include="System.Data" />
         <Reference Include="System.Drawing" />
         <Reference Include="System.Management">
           <HintPath>C:\Users\elio\.nuget\packages\system.management\9.0.0-preview.3.24172.9\lib\netstandard2.0\System.Management.dll</HintPath>
@@ -90,13 +89,13 @@
         </Reference>
         <Reference Include="System.Web" />
         <Reference Include="System.Windows.Forms" />
-        <Reference Include="System.Xml"/>
+        <Reference Include="System.Xml" />
         <Reference Include="System.Xaml">
             <RequiredTargetFramework>4.0</RequiredTargetFramework>
         </Reference>
-        <Reference Include="WindowsBase"/>
-        <Reference Include="PresentationCore"/>
-        <Reference Include="PresentationFramework"/>
+        <Reference Include="WindowsBase" />
+        <Reference Include="PresentationCore" />
+        <Reference Include="PresentationFramework" />
     </ItemGroup>
     <ItemGroup>
         <ApplicationDefinition Include="App.xaml">
@@ -115,8 +114,10 @@
         <Compile Include="Game\Client.cs" />
         <Compile Include="Game\Controller.cs" />
         <Compile Include="Game\Game.cs" />
+        <Compile Include="LCU\bo\Ability.cs" />
         <Compile Include="LCU\bo\Champion.cs" />
         <Compile Include="LCU\bo\Match.cs" />
+        <Compile Include="LCU\bo\Summoner.cs" />
         <Compile Include="LCU\GameApi.cs" />
         <Compile Include="LCU\LcuManager.cs" />
         <Compile Include="LCU\ClientApi.cs" />
@@ -141,11 +142,11 @@
         </EmbeddedResource>
     </ItemGroup>
     <ItemGroup>
-        <None Include="App.config"/>
+        <None Include="App.config" />
         <None Include="packages.config" />
     </ItemGroup>
     <ItemGroup>
       <Content Include="data.json" />
     </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

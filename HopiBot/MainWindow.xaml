@@ -5,56 +5,61 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HopiBot"
         mc:Ignorable="d"
-        Title="MainWindow" Height="280" Width="300" Background="Black" WindowStyle="None" AllowsTransparency="True"
+        Title="MainWindow" Height="361" Width="534" Background="Black" WindowStyle="None" AllowsTransparency="True"
         WindowStartupLocation="CenterScreen"
         Topmost="True"
         MouseLeftButtonDown="Window_MouseLeftButtonDown">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-
+    <Canvas>
         <!-- Close Button in the top-right corner -->
         <Button Content="X" Width="30" Height="30" Background="Black" Foreground="White" FontSize="16" BorderBrush="Transparent"
-                FontWeight="Bold"
-                HorizontalAlignment="Right" VerticalAlignment="Top" Click="CloseButton_Click"
-                Margin="0,0,0,0" />
+            FontWeight="Bold"
+            Click="CloseButton_Click"
+                HorizontalAlignment="Left" Canvas.Left="504" VerticalAlignment="Top" Canvas.Top="0" />
 
-        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="60,20,0,0">
-            <TextBlock Text="局数" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
-            <Grid Width="90" Margin="20,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Name="CurrRoundBlk" Text="0" Foreground="White" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,20,0"/>
-                <TextBlock Text="/" Foreground="White" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="1"/>
-                <TextBox Background="Transparent" CaretBrush="White" Foreground="White" BorderBrush="Transparent" Name="TotalRoundTb" Width="35" Text="10" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="20,0,0,0" Grid.Column="2"/>
-            </Grid>
-        </StackPanel>
+        <Button x:Name="StartupBtn" Content="启动" Width="100" Height="40" Background="#333333" Foreground="White" FontSize="16"
+            FontWeight="Bold"
+            BorderBrush="White" BorderThickness="2" Click="StartupBtn_OnClick" HorizontalAlignment="Left" Canvas.Left="217" Canvas.Top="311" VerticalAlignment="Bottom"/>
+        <TextBlock x:Name="GameStatusBlk" Text="..." Foreground="LawnGreen" FontSize="20" FontWeight="Bold" HorizontalAlignment="Left" Canvas.Left="258" Canvas.Top="10" VerticalAlignment="Top"/>
 
-        <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="60,20,0,0">
-            <TextBlock Text="英雄" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
-            <ComboBox Name="ChampCb" Width="130" VerticalAlignment="Center" Margin="20,0,0,0" FontSize="20" IsEditable="True">
-            </ComboBox>
-        </StackPanel>
-
-        <Button Name="StartupBtn" Content="启动" Width="100" Height="40" Background="#333333" Foreground="White" FontSize="16"
-                FontWeight="Bold"
-                HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Row="3" Grid.Column="0" Margin="0,0,0,40"
-                BorderBrush="White" BorderThickness="2" Click="StartupBtn_OnClick"/>
-        <TextBlock Name="GameStatusBlk" Text="..." Foreground="LawnGreen" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Row="0" Grid.Column="0" FontSize="20" FontWeight="Bold" Margin="0,10,0,0"/>
-
-        <Grid Visibility="Hidden" VerticalAlignment="Center" Margin="60,20,0,0">
-            <TextBox Name="Xtb" Width="50" Height="20" Background="White" Foreground="Black" CaretBrush="Black" HorizontalAlignment="Left" ></TextBox>
-            <TextBox Name="Ytb" Width="50" Height="20" Background="White" Foreground="Black" CaretBrush="Black" HorizontalAlignment="Right"></TextBox>
+        <Grid Visibility="Hidden" Canvas.Left="60" Canvas.Top="20" VerticalAlignment="Top" Width="314">
+            <TextBox x:Name="Xtb" Width="50" Height="20" Background="White" Foreground="Black" CaretBrush="Black" HorizontalAlignment="Left" />
+            <TextBox x:Name="Ytb" Width="50" Height="20" Background="White" Foreground="Black" CaretBrush="Black" HorizontalAlignment="Right"/>
         </Grid>
-    </Grid>
+        <TabControl Height="263" Canvas.Top="43" Width="534" HorizontalAlignment="Center" VerticalAlignment="Top" Background="#FF383838" BorderBrush="#FF383838">
+            <TabItem Header="main" Background="Gray">
+                <Grid Background="#FF383838">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="75*"/>
+                        <ColumnDefinition Width="227*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="局数" Foreground="White" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="23,44,0,0" />
+                    <TextBlock x:Name="CurrRoundBlk" Text="0" Foreground="White" FontSize="16" Width="15" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="66,44,0,0"/>
+                    <TextBlock Text="英雄" Foreground="White" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="23,101,0,0" />
+                    <ComboBox x:Name="ChampCb" Width="130" FontSize="16" IsEditable="True" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.ColumnSpan="2" Margin="66,98,0,0"/>
+                    <Label Grid.Column="1" Content="上一局获得xp" HorizontalAlignment="Left" Height="36" Margin="99,39,0,0" VerticalAlignment="Top" Width="140" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                    <Label Grid.Column="1" Content="总共获得xp" HorizontalAlignment="Left" Height="36" Margin="115,93,0,0" VerticalAlignment="Top" Width="94" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                    <Label x:Name="LbXpEarnedLastRound" Grid.Column="1" Content="0" HorizontalAlignment="Left" Height="34" Margin="228,40,0,0" VerticalAlignment="Top" Width="71" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                    <Label x:Name="LbXpEarnedTotal" Grid.Column="1" Content="0" HorizontalAlignment="Left" Height="36" Margin="228,93,0,0" VerticalAlignment="Top" Width="71" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="状态" Background="Gray">
+                <Grid Background="#FF383838" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="32*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="1" Content="英雄位置" HorizontalAlignment="Left" Height="28" Margin="10,21,0,0" VerticalAlignment="Top" Width="59" Foreground="White"/>
+                    <Label Grid.Column="1" Content="动作" HorizontalAlignment="Left" Height="28" Margin="33,54,0,0" VerticalAlignment="Top" Width="36" Foreground="White"/>
+                    <Label Grid.Column="1" Content="死亡" HorizontalAlignment="Left" Height="28" Margin="33,90,0,0" VerticalAlignment="Top" Width="36" Foreground="White"/>
+                    <Label Grid.Column="1" Content="残血" HorizontalAlignment="Left" Height="28" Margin="33,123,0,0" VerticalAlignment="Top" Width="36" Foreground="White"/>
+                    <Label Grid.Column="1" Content="遭受攻击" HorizontalAlignment="Left" Height="28" Margin="10,156,0,0" VerticalAlignment="Top" Width="59" Foreground="White"/>
+                    <Label x:Name="LbChampPosition" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,21,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
+                    <Label x:Name="LbAction" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,54,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
+                    <Label x:Name="LbDead" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,90,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
+                    <Label x:Name="LbLowHealth" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,123,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
+                    <Label x:Name="LbUnderAttack" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,156,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Canvas>
 </Window>

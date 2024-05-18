@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace HopiBot
@@ -10,8 +11,14 @@ namespace HopiBot
 
         public static void Log(string message)
         {
-            string logMessage = $"{DateTime.Now} {message}";
+            string logMessage = $"{DateTime.Now} {GetCallerInfo()} {message}";
             WriteToFile(logMessage);
+        }
+
+        public static void Log(string message, Exception ex)
+        {
+            string fullMessage = $"{message}\nException: {ex.Message}\nStack Trace: {ex.StackTrace}";
+            Log(fullMessage);
         }
 
         private static void WriteToFile(string message)
@@ -29,10 +36,26 @@ namespace HopiBot
             }
         }
 
-        public static void Log(string message, Exception ex)
+        private static string GetCallerInfo()
         {
-            string fullMessage = $"{message}\nException: {ex.Message}\nStack Trace: {ex.StackTrace}";
-            Log(fullMessage);
+            var stackTrace = new StackTrace(true);
+            for (int i = 1; i < stackTrace.FrameCount; i++)
+            {
+                var frame = stackTrace.GetFrame(i);
+                var method = frame.GetMethod();
+                var declaringType = method.DeclaringType;
+
+                if (declaringType != typeof(Logger))
+                {
+                    var namespaceName = declaringType.Namespace;
+                    var className = declaringType.Name;
+                    var methodName = method.Name;
+                    var fileName = frame.GetFileName();
+                    var lineNumber = frame.GetFileLineNumber();
+                    return $"{namespaceName}.{className}.{methodName} (at {fileName}:{lineNumber})";
+                }
+            }
+            return "Unknown Caller";
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using HopiBot.LCU.bo;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace HopiBot.LCU
 {
@@ -55,6 +57,66 @@ namespace HopiBot.LCU
             }
         }
 
+        public static int GetCurrentHealth()
+        {
+            try
+            {
+                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+                var currentHealth = myData["championStats"]["currentHealth"].ToObject<int>();
+                return currentHealth;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Get the percentage of the current health of the player
+        /// </summary>
+        /// <returns>0-100</returns>
+        public static int GetHealthPercent()
+        {
+            try
+            {
+                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+                var currentHealth = myData["championStats"]["currentHealth"].ToObject<int>();
+                var maxHealth = myData["championStats"]["maxHealth"].ToObject<int>();
+                return currentHealth * 100 / maxHealth;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        public static int GetLevel()
+        {
+            try
+            {
+                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+                var level = myData["level"].ToObject<int>();
+                return level;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        public static Abilities GetAbilities()
+        {
+            try
+            {
+                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+                var abilities = myData["abilities"].ToString();
+                return JsonConvert.DeserializeObject<Abilities>(abilities);
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
     }
 }

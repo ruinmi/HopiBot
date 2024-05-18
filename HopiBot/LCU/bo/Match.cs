@@ -4,6 +4,8 @@ namespace HopiBot.LCU.bo
 {
     public class Match
     {
+        public long GameCreation { get; set; }
+        public long GameDuration { get; set; }
         public long GameId { get; set; }
         public string GameMode { get; set; }
         public string GameType { get; set; }
@@ -33,54 +35,65 @@ namespace HopiBot.LCU.bo
         public int TeamId { get; set; }
         public Timeline Timeline { get; set; }
 
-        public double CalculateScore()
+        public double CalculateScore(long duration)
         {
+            double normalizedKills = (double)Stats.Kills / duration * 10;
+            double normalizedDeaths = (double)Stats.Deaths / duration * 10;
+            double normalizedAssists = (double)Stats.Assists / duration * 10;
+            double normalizedGoldEarned = ((double)Stats.GoldEarned / duration) / 1000 * 10;
+            double normalizedDamageDealt = ((double)Stats.TotalDamageDealtToChampions / duration) / 1000 * 10;
+            double normalizedDamageTaken = ((double)Stats.TotalDamageTaken / duration) / 1000 * 10;
+            double normalizedMinionsKilled = (double)Stats.TotalMinionsKilled / duration;
+            var level = Stats.ChampLevel;
+            double winBonus = 0;
+
             double score = 0;
 
-            if (Timeline.Lane == "TOP" || Timeline.Lane == "MIDDLE")
+            if (Timeline.Lane == "TOP" || Timeline.Lane == "MIDDLE" || (Timeline.Lane == "BOTTOM" && Timeline.Role == "DUO"))
             {
                 // 上单或中单
-                score = (Stats.Kills * 2) +
-                        Stats.Assists -
-                        Stats.Deaths +
-                        (Stats.GoldEarned / 1000.0) +
-                        (Stats.TotalDamageDealtToChampions / 1000.0) +
-                        (Stats.TotalDamageTaken / 5000.0) +
-                        (Stats.TotalMinionsKilled / 10.0);
-            }
-            else if (Timeline.Lane == "BOTTOM")
-            {
-                if (Timeline.Role == "CARRY")
+                if (normalizedDamageDealt > normalizedDamageTaken) // 输出型
                 {
-                    // ADC
-                    score = (Stats.Kills * 2.5) +
-                            Stats.Assists -
-                            Stats.Deaths +
-                            (Stats.GoldEarned / 1000.0) +
-                            (Stats.TotalDamageDealtToChampions / 1000.0) +
-                            (Stats.TotalMinionsKilled / 10.0);
+                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.7 * normalizedAssists + 1.0 * normalizedGoldEarned + 1.1 * normalizedDamageDealt + 4 * normalizedDamageTaken + 1.0 * normalizedMinionsKilled + winBonus + 0.004 * level;
                 }
-                else if (Timeline.Role == "SUPPORT")
+                else
                 {
-                    // 辅助
-                    score = (Stats.Assists * 2) -
-                            Stats.Deaths +
-                            (Stats.TotalDamageDealtToChampions / 2000.0) +
-                            (Stats.TotalDamageTaken / 4000.0);
+                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.7 * normalizedAssists + 1.0 * normalizedGoldEarned + 4 * normalizedDamageDealt + 1.1 * normalizedDamageTaken + 1.0 * normalizedMinionsKilled + winBonus + 0.004 * level;
                 }
             }
             else if (Timeline.Lane == "JUNGLE")
             {
                 // 打野
-                score = (Stats.Kills * 2) +
-                        Stats.Assists -
-                        Stats.Deaths +
-                        (Stats.GoldEarned / 1000.0) +
-                        (Stats.TotalDamageDealtToChampions / 1000.0) +
-                        (Stats.TotalMinionsKilled / 15.0);
+                if (normalizedDamageDealt > normalizedDamageTaken) // 输出型
+                {
+                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.6 * normalizedAssists + 1.1 * normalizedGoldEarned + 3.2 * normalizedDamageDealt + 1.1 * normalizedDamageTaken + 0.8 * normalizedMinionsKilled + winBonus + 0.004 * level;
+                }
+                else
+                {
+                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.6 * normalizedAssists + 1.1 * normalizedGoldEarned + 1.1 * normalizedDamageDealt + 3.2 * normalizedDamageTaken + 0.8 * normalizedMinionsKilled + winBonus + 0.004 * level;
+                }
             }
-
-            return score;
+            else
+            {
+                if (Timeline.Role == "CARRY")
+                {
+                    // ADC
+                    score = 4 * normalizedKills - 8 * normalizedDeaths + 0.5 * normalizedAssists + 1.1 * normalizedGoldEarned + 4 * normalizedDamageDealt + 0.8 * normalizedMinionsKilled + winBonus + 0.003 * level;
+                }
+                else if (Timeline.Role == "SUPPORT" || Timeline.Role == "SOLO")
+                {
+                    // 辅助
+                    if (normalizedDamageDealt > normalizedDamageTaken) // 输出型
+                    {
+                        score = 0.8 * normalizedKills - 7 * normalizedDeaths + 5 * normalizedAssists + 0.6 * normalizedGoldEarned + 3 * normalizedDamageDealt + 0.2 * normalizedDamageTaken + 0.3 * normalizedMinionsKilled + winBonus + 0.002 * level;
+                    }
+                    else
+                    {
+                        score = 0.8 * normalizedKills - 7 * normalizedDeaths + 6 * normalizedAssists + 0.6 * normalizedGoldEarned + 0.2 * normalizedDamageDealt + 3 * normalizedDamageTaken + 0.3 * normalizedMinionsKilled + winBonus + 0.002 * level;
+                    }
+                }
+            }
+            return score * 10;
         }
     }
 

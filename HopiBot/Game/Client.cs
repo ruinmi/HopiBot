@@ -8,7 +8,7 @@ namespace HopiBot.Game
 {
     public class Client
     {
-        public MainWindow MainWindow;
+        private MainWindow _mainWindow;
         public Champion Champ;
         private Game _game;
 
@@ -17,13 +17,13 @@ namespace HopiBot.Game
 
         public Client(MainWindow mainWindow)
         {
-            MainWindow = mainWindow;
+            _mainWindow = mainWindow;
         }
 
         public void Start()
         {
             var phase = ClientApi.GetGamePhase();
-            if (phase == GamePhase.None) ClientApi.CreateBotLobby();
+            if (phase == GamePhase.None) ClientApi.CreateBotLobby(1);
 
             GamePhaseListening();
         }
@@ -39,9 +39,9 @@ namespace HopiBot.Game
                         break;
                     case GamePhase.Lobby:
                         ClientApi.SearchMath();
+                        _isAccepted = false;
                         break;
                     case GamePhase.Matchmaking:
-                        _isAccepted = false;
                         break;
                     case GamePhase.ReadyCheck:
                         if (_isAccepted) break;
@@ -55,29 +55,35 @@ namespace HopiBot.Game
                         _isChampSelected = true;
                         break;
                     case GamePhase.InProgress:
-                        _game = new Game();
+                        Logger.Log("===============================Start of Game===============================");
+                        _game = new Game(_mainWindow);
                         _game.Start();
+                        break;
+                    case GamePhase.PreEndOfGame:
+                        Thread.Sleep(3000);
+                        Controller.LeftClickClient(638, 680);
+                        Thread.Sleep(1000);
+                        ClientApi.HonorPlayer();
                         break;
                     case GamePhase.WaitingForStats:
                         break;
                     case GamePhase.EndOfGame:
                         Application.Current.Dispatcher.Invoke(() =>
-                            MainWindow.CurrRoundBlk.Text = (int.Parse(MainWindow.CurrRoundBlk.Text) + 1).ToString());
-                        ClientApi.HonorPlayer();
+                            _mainWindow.CurrRoundBlk.Text = (int.Parse(_mainWindow.CurrRoundBlk.Text) + 1).ToString());
                         Thread.Sleep(2000);
                         var isPlayAgain = ClientApi.PlayAgain();
                         if (!isPlayAgain) return;
                         Thread.Sleep(2000);
-                        break;
-                    default:
+                        Logger.Log("===============================End of Game===============================");
                         break;
                 }
+                Thread.Sleep(500);
             }
         }
 
-        public void Abort()
+        public void Shutdown()
         {
-            _game?.AbortPlay();
+            _game?.StopGame();
         }
     }
 }
