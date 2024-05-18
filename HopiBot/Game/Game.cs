@@ -153,9 +153,9 @@ namespace HopiBot.Game
             while (true)
             {
                 // 泉水出发
-                // UpgradeAbilities();
-                // BuyItems();
-                // MoveToTurretMid(25 * 1000);
+                BuyItems();
+                UpgradeAbilities();
+                MoveToTurretMid(25 * 1000);
 
                 // 对线
                 while (true)
@@ -277,7 +277,14 @@ namespace HopiBot.Game
         private void ReturnToBase()
         {
             Action = "Return To Base";
-            MoveToTurretMid(10 * 1000);
+            Controller.RightClick(Controller.CenterOfScreen.Add(-500, 300));
+            Thread.Sleep(200);
+            Keyboard.KeyPress(Keys.D, 100);
+            Keyboard.KeyPress(Keys.W, 100);
+            Thread.Sleep(1500);
+            Keyboard.KeyPress(Keys.F, 100);
+            Thread.Sleep(1000);
+            MoveToTurretMid(5 * 1000);
             Keyboard.KeyPress(Keys.B, 100);
             Thread.Sleep(12 * 1000);
             Position = Position.InBase;
@@ -292,13 +299,11 @@ namespace HopiBot.Game
             Keyboard.KeyPress(Keys.A, 50);
             Controller.LeftClick(Controller.CenterOfScreen.Add(20, -150));
             Thread.Sleep(100);
-            Controller.LeftClick(Controller.CenterOfScreen.Add(120, -220));
-            Thread.Sleep(100);
-            Keyboard.KeyPress(Keys.Q, 50);
-            Thread.Sleep(100);
-            Keyboard.KeyPress(Keys.W, 50);
+            Controller.LeftClick(Controller.CenterOfScreen.Add(380, -290));
             Thread.Sleep(100);
             Keyboard.KeyPress(Keys.E, 50);
+            Thread.Sleep(100);
+            Keyboard.KeyPress(Keys.Q, 50);
         }
 
         /// <summary>

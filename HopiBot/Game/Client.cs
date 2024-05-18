@@ -23,7 +23,7 @@ namespace HopiBot.Game
         public void Start()
         {
             var phase = ClientApi.GetGamePhase();
-            if (phase == GamePhase.None) ClientApi.CreateBotLobby(1);
+            if (phase == GamePhase.None) ClientApi.CreateBotLobby();
 
             GamePhaseListening();
         }

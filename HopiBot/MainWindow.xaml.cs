@@ -94,7 +94,7 @@ namespace HopiBot
             _updateTimer.Elapsed += (sender, e) =>
             {
                 var phase = ClientApi.GetGamePhase();
-                if (phase == GamePhase.EndOfGame)
+                if (phase == GamePhase.ChampSelect || phase == GamePhase.EndOfGame || phase == GamePhase.PreEndOfGame)
                 {
                     var currXp = ClientApi.GetMyXp();
                     if (currXp == _xp) return;

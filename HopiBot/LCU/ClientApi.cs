@@ -188,7 +188,6 @@ namespace HopiBot.LCU
                 var eligiblePlayers = JObject.Parse(LcuManager.Instance.GetClient("/lol-honor-v2/v1/ballot").Content)["eligiblePlayers"];
                 if (!eligiblePlayers.Any()) return;
                 var data = new {summonerId = eligiblePlayers[0]["summonerId"].ToObject<long>()};
-                Logger.Log(data.ToString());
                 LcuManager.Instance.PostClient("/lol-honor-v2/v1/honor-player", data);
                 Logger.Log("honor player: " + eligiblePlayers[0]["summonerId"]);
             }
