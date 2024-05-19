@@ -209,9 +209,9 @@ namespace HopiBot.LCU
             return JsonConvert.DeserializeObject<Match>(response.Content);
         }
 
-        public static List<Match> GetMatchesByPuuid(string puuid)
+        public static List<Match> GetMatchesByPuuid(string puuid, int beginIdx = 0, int endIdx = 10)
         {
-            var response = LcuManager.Instance.GetClient($"/lol-match-history/v1/products/lol/{puuid}/matches");
+            var response = LcuManager.Instance.GetClient($"/lol-match-history/v1/products/lol/{puuid}/matches?begIndex={beginIdx}&endIndex={endIdx}", 5000);
             var m = JObject.Parse(response.Content);
             var matches = JsonConvert.DeserializeObject<List<Match>>(m["games"]["games"].ToString());
             return matches;
@@ -237,5 +237,22 @@ namespace HopiBot.LCU
             return xp.ToObject<int>();
         }
 
+        public static Dictionary<string, List<string>> GetTeamPuuid()
+        {
+            var result = new Dictionary<string, List<string>>
+            {
+                {"teamOne", new List<string>()},
+                {"teamTwo", new List<string>()}
+            };
+            var gameData = JObject.Parse(LcuManager.Instance.GetClient("/lol-gameflow/v1/session").Content)["gameData"];
+            if (gameData == null) return result;
+            var teamOne = gameData["teamOne"];
+            var teamTwo = gameData["teamTwo"];
+            var teamOnePuuid = teamOne.Select(i => i["puuid"].ToString()).ToList();
+            var teamTwoPuuid = teamTwo.Select(i => i["puuid"].ToString()).ToList();
+            result["teamOne"] = teamOnePuuid;
+            result["teamTwo"] = teamTwoPuuid;
+            return result;
+        }
     }
 }

@@ -114,6 +114,7 @@
         <Compile Include="Game\Client.cs" />
         <Compile Include="Game\Controller.cs" />
         <Compile Include="Game\Game.cs" />
+        <Compile Include="Game\ScoreService.cs" />
         <Compile Include="LCU\bo\Ability.cs" />
         <Compile Include="LCU\bo\Champion.cs" />
         <Compile Include="LCU\bo\Match.cs" />

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -57,35 +60,32 @@ namespace HopiBot
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        var xp = ClientApi.GetMyXp();
-                        // var puuid = "dfbf20ad-cf8c-52e2-9ec1-f225423321fe";
-                        // var puuid = "2fda0cc5-1374-547d-a67d-e8da9379a324";
-                        // var name = ClientApi.GetSummoner(puuid).DisplayName;
-                        // var matches = ClientApi.GetMatchesByPuuid(puuid);
-                        // foreach (var match in matches)
-                        // {
-                        //     if (match.GameMode != "CLASSIC" || match.GameType != "MATCHED_GAME") continue;
-                        //     DateTime dateTime = DateTimeOffset.FromUnixTimeMilliseconds(match.GameCreation).UtcDateTime.ToLocalTime();
-                        //     var m = ClientApi.GetMatch(match.GameId);
-                        //     var participantId = 0;
-                        //     foreach (var mParticipantIdentity in m.ParticipantIdentities)
-                        //     {
-                        //         if (puuid == mParticipantIdentity.Player.Puuid)
-                        //         {
-                        //             participantId = mParticipantIdentity.ParticipantId;
-                        //         }
-                        //     }
-                        //     foreach (var participant in m.Participants)
-                        //     {
-                        //         if (participantId == participant.ParticipantId)
-                        //         {
-                        //             Logger.Log($"{name} {dateTime}: {participant.CalculateScore(match.GameDuration).ToString()}");
-                        //         }
-                        //     }
-                        // }
+                        var b = ClientApi.GetMatchesByPuuid(ClientApi.GetMyPuuid())[0];
+                        var a = b.Participants.Select(p => p.CalculateScore(b.GameDuration)).ToList();
                     });
                 }
             };
+        }
+
+        private void GetTeamInfo(object sender, RoutedEventArgs e)
+        {
+            Task.Run(() =>
+            {
+                var scores = ScoreService.GetScores();
+                Dispatcher.Invoke(() =>
+                {
+                    var allyInfo = scores["ally"].Select(s => $"{s.Item1}: {s.Item2}").ToList();
+                    var enemyInfo = scores["enemy"].Select(s => $"{s.Item1}: {s.Item2}").ToList();
+                    if (allyInfo.Count == 0 || enemyInfo.Count == 0)
+                    {
+                        MessageBox.Show("无法获取队伍信息");
+                        return;
+                    }
+                    // 保留一位小数
+                    TbAllyInfo.Text = string.Join("\n\n", allyInfo);
+                    TbEnemyInfo.Text = string.Join("\n\n", enemyInfo);
+                });
+            });
         }
 
         private void UpdateInfo()

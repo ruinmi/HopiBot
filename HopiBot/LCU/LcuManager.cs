@@ -57,9 +57,10 @@ namespace HopiBot.LCU
             _gameClient = new RestClient(options);
         }
 
-        public RestResponse GetClient(string path)
+        public RestResponse GetClient(string path, int timeout = 0)
         {
             var request = new RestRequest(path);
+            if (timeout > 0) request.Timeout = timeout;
             var response = _client.Get(request);
             return response;
         }
