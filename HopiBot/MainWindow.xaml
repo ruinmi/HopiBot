@@ -53,11 +53,13 @@
                     <Label Grid.Column="1" Content="死亡" HorizontalAlignment="Left" Height="28" Margin="33,90,0,0" VerticalAlignment="Top" Width="36" Foreground="White"/>
                     <Label Grid.Column="1" Content="残血" HorizontalAlignment="Left" Height="28" Margin="33,123,0,0" VerticalAlignment="Top" Width="36" Foreground="White"/>
                     <Label Grid.Column="1" Content="遭受攻击" HorizontalAlignment="Left" Height="28" Margin="10,156,0,0" VerticalAlignment="Top" Width="59" Foreground="White"/>
+                    <Label Grid.Column="1" Content="血量" HorizontalAlignment="Left" Height="28" Margin="33,189,0,0" VerticalAlignment="Top" Width="36" Foreground="White"/>
                     <Label x:Name="LbChampPosition" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,21,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
                     <Label x:Name="LbAction" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,54,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
                     <Label x:Name="LbDead" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,90,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
                     <Label x:Name="LbLowHealth" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,123,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
                     <Label x:Name="LbUnderAttack" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,156,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
+                    <Label x:Name="LbLastHealth" Grid.Column="1" Content="" HorizontalAlignment="Left" Height="28" Margin="79,189,0,0" VerticalAlignment="Top" Width="415" Foreground="White"/>
                 </Grid>
             </TabItem>
         </TabControl>

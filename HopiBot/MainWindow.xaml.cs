@@ -110,7 +110,7 @@ namespace HopiBot
             _updateTimer.Start();
         }
 
-        public void UpdatePlayerInfo(bool isUnderAttack, bool isLowHealth, string action, bool isDead, string position)
+        public void UpdatePlayerInfo(bool isUnderAttack, bool isLowHealth, string action, bool isDead, string position, string lastHealth)
         {
             Dispatcher.Invoke(() =>
             {
@@ -119,6 +119,7 @@ namespace HopiBot
                 LbAction.Content = action;
                 LbDead.Content = isDead;
                 LbChampPosition.Content = position;
+                LbLastHealth.Content = lastHealth;
             });
         }
 

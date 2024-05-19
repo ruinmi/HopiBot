@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using HopiBot.Enum;
@@ -14,6 +15,8 @@ namespace HopiBot.Game
         #region Game Thread
 
         private Thread _playThread;
+        private CancellationTokenSource _ctsPlay;
+        private CancellationTokenSource _cts;
         private Thread _healthThread;
 
         #endregion
@@ -102,6 +105,7 @@ namespace HopiBot.Game
 
         public void Start()
         {
+            _cts = new CancellationTokenSource();
             _healthThread = new Thread(HealthCheck);
             _healthThread.Start();
             // 游戏20s后开始
@@ -118,6 +122,7 @@ namespace HopiBot.Game
             // 游戏开始，监听游戏是否结束、是否死亡
             while (true)
             {
+                Thread.Sleep(2000);
                 var phase = ClientApi.GetGamePhase();
                 if (phase != GamePhase.InProgress)
                 {
@@ -126,126 +131,134 @@ namespace HopiBot.Game
                     break;
                 }
 
-                _isDead = GameApi.IsDead();
+                _isDead = _lastHealth <= 0;
                 if (_isDead)
                 {
                     if (_playThread == null) continue;
                     StopPlay();
-                    _playThread = null;
                 }
                 else
                 {
                     if (_playThread != null) continue;
-                    _playThread = new Thread(Play);
+                    _ctsPlay = new CancellationTokenSource();
+                    _playThread = new Thread(() => Play(_ctsPlay.Token));
                     _playThread.Start();
                 }
 
-                Thread.Sleep(2000);
+                if (_cts.IsCancellationRequested) break;
             }
         }
 
         /// <summary>
         /// 开始游戏
         /// </summary>
-        private void Play()
+        /// <param name="token"></param>
+        private void Play(CancellationToken token)
         {
-            Start:
-            while (true)
+            try
             {
-                // 泉水出发
-                BuyItems();
-                UpgradeAbilities();
-                MoveToTurretMid(25 * 1000);
-
-                // 对线
+                Start:
                 while (true)
                 {
-                    MoveToFight(3 * 1000);
-                    Action = "Fighting";
-                    for (int i = 0; i < 40; i++)
+                    // 泉水出发
+                    BuyItems(token);
+                    UpgradeAbilities();
+                    MoveToTurretMid(25 * 1000, token);
+
+                    // 对线
+                    while (true)
                     {
-                        if (_isLowHealth && _position != Position.InBase)
+                        MoveToFight(3 * 1000, token);
+                        Action = "Fighting";
+                        for (int i = 0; i < 40; i++)
                         {
-                            ReturnToBase();
-                            goto Start;
+                            if (_isLowHealth && _position != Position.InBase)
+                            {
+                                ReturnToBase(token);
+                                goto Start;
+                            }
+
+                            if (_isUnderAttack)
+                            {
+                                MoveToTurretMid(2 * 1000, token);
+                            }
+
+                            Attack();
                         }
 
-                        if (_isUnderAttack)
-                        {
-                            MoveToTurretMid(2 * 1000);
-                        }
-
-                        Attack();
+                        MoveToTurretMid(3 * 1000, token);
                     }
-
-                    MoveToTurretMid(3 * 1000);
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                Action = "Dead, Stop Playing";
             }
         }
 
-        private void MoveToTurretMid(int duration)
+        private void MoveToTurretMid(int duration, CancellationToken token)
         {
             Action = "Move To Turret Mid";
             Controller.RightClick(Controller.MiniMapUnderTurretMid);
-            Thread.Sleep(duration);
+            SleepWithCancellation(duration, token);
             Position = Position.UnderTurretMid;
         }
 
-        private void MoveToCenterMid(int duration)
+        private void MoveToCenterMid(int duration, CancellationToken token)
         {
             Action = "Move To Center Mid";
             Controller.RightClick(Controller.MiniMapCenterMid);
-            Thread.Sleep(duration);
+            SleepWithCancellation(duration, token);
             Position = Position.CenterMid;
         }
 
-        private void MoveToOuterTurretMid(int duration)
+        private void MoveToOuterTurretMid(int duration, CancellationToken token)
         {
             Action = "Move To Outer Turret Mid";
             Controller.RightClick(Controller.MiniMapUnderOuterTurretMid);
-            Thread.Sleep(duration);
+            SleepWithCancellation(duration, token);
             Position = Position.UnderOuterTurretMid;
         }
 
-        private void MoveToInnerTurretMid(int duration)
+        private void MoveToInnerTurretMid(int duration, CancellationToken token)
         {
             Action = "Move To Inner Turret Mid";
             Controller.RightClick(Controller.MiniMapUnderInnderTurretMid);
-            Thread.Sleep(duration);
+            SleepWithCancellation(duration, token);
             Position = Position.UnderInnerTurretMid;
         }
 
-        private void MoveToInhibitorTurretMid(int duration)
+        private void MoveToInhibitorTurretMid(int duration, CancellationToken token)
         {
             Action = "Move To Inhibitor Turret Mid";
             Controller.RightClick(Controller.MiniMapUnderInhibitorTurretMid);
-            Thread.Sleep(duration);
+            SleepWithCancellation(duration, token);
             Position = Position.UnderInhibitorTurretMid;
         }
 
-        private void MoveToNexusTurretMid(int duration)
+        private void MoveToNexusTurretMid(int duration, CancellationToken token)
         {
             Action = "Move To Nexus Turret Mid";
             Controller.RightClick(Controller.MiniMapEnemyNexus);
-            Thread.Sleep(duration);
+            SleepWithCancellation(duration, token);
             Position = Position.UnderNexusTurretMid;
         }
 
-        private void MoveToNexus(int duration)
+        private void MoveToNexus(int duration, CancellationToken token)
         {
             Action = "Move To Nexus";
             Controller.RightClick(Controller.MiniMapEnemyNexus);
-            Thread.Sleep(duration);
+            SleepWithCancellation(duration, token);
             Position = Position.UnderNexusTurretMid;
         }
 
-        private void MoveToFight(int duration)
+        private void MoveToFight(int duration, CancellationToken token)
         {
             Action = "Move To Fight";
             var data = GameApi.GetGameEvents();
             if (data == null)
             {
-                MoveToTurretMid(duration);
+                MoveToTurretMid(duration, token);
                 return;
             }
             var events = data.ToList();
@@ -258,37 +271,37 @@ namespace HopiBot.Game
                 {
                     case Controller.NexusTurret1:
                     case Controller.NexusTurret2:
-                        MoveToNexusTurretMid(duration);
+                        MoveToNexusTurretMid(duration, token);
                         return;
                     case Controller.MidInhibitorTurret:
-                        MoveToInhibitorTurretMid(duration);
+                        MoveToInhibitorTurretMid(duration, token);
                         return;
                     case Controller.MidInnerTurret:
-                        MoveToInnerTurretMid(duration);
+                        MoveToInnerTurretMid(duration, token);
                         return;
                     case Controller.MidOuterTurret:
-                        MoveToOuterTurretMid(duration);
+                        MoveToOuterTurretMid(duration, token);
                         return;
                 }
             }
-            MoveToCenterMid(duration);
+            MoveToCenterMid(duration, token);
         }
 
-        private void ReturnToBase()
+        private void ReturnToBase(CancellationToken token)
         {
             Action = "Return To Base";
             Controller.RightClick(Controller.CenterOfScreen.Add(-500, 300));
-            Thread.Sleep(200);
+            SleepWithCancellation(200, token);
             Keyboard.KeyPress(Keys.D, 100);
             Keyboard.KeyPress(Keys.W, 100);
-            Thread.Sleep(1500);
+            SleepWithCancellation(1300, token);
             Keyboard.KeyPress(Keys.F, 100);
-            Thread.Sleep(1000);
-            MoveToTurretMid(5 * 1000);
+            SleepWithCancellation(100, token);
+            MoveToTurretMid(5 * 1000, token);
             Keyboard.KeyPress(Keys.B, 100);
-            Thread.Sleep(12 * 1000);
+            SleepWithCancellation(12 * 1000, token);
             Position = Position.InBase;
-            Thread.Sleep(1000 * 3); // recover time
+            SleepWithCancellation(3 * 1000, token); // recover time
         }
 
         /// <summary>
@@ -342,20 +355,20 @@ namespace HopiBot.Game
         /// <summary>
         /// 在泉水动作：购买装备
         /// </summary>
-        private void BuyItems()
+        private void BuyItems(CancellationToken token)
         {
             Action = "Buy Items";
             Keyboard.KeyPress(Keys.P, 100);
-            Thread.Sleep(1000);
+            SleepWithCancellation(1000, token);
             foreach (var point in Controller.ShopItemButtons)
             {
                 Controller.RightClick(point);
-                Thread.Sleep(200);
+                SleepWithCancellation(200, token);
                 Controller.RightClick(point);
-                Thread.Sleep(1000);
+                SleepWithCancellation(1000, token);
             }
 
-            Thread.Sleep(1000);
+            SleepWithCancellation(1000, token);
             Keyboard.KeyPress(Keys.P, 100);
         }
 
@@ -386,11 +399,6 @@ namespace HopiBot.Game
                 Keyboard.KeyPress(Keys.E, 100);
                 availablePoints -= 1;
             }
-            if (abilities.R.AbilityLevel == 0)
-            {
-                Keyboard.KeyPress(Keys.R, 100);
-                availablePoints -= 1;
-            }
 
             for (int i = 0; i < availablePoints; i++)
             {
@@ -408,8 +416,21 @@ namespace HopiBot.Game
 
         private void StopPlay()
         {
-            _playThread?.Abort();
-            _playThread?.Join();
+            _ctsPlay?.Cancel();
+            _playThread = null;
+        }
+
+        private static void SleepWithCancellation(int milliseconds, CancellationToken token)
+        {
+            const int interval = 100; // 每100毫秒检查一次取消请求
+            int elapsed = 0;
+
+            while (elapsed < milliseconds)
+            {
+                token.ThrowIfCancellationRequested();
+                Thread.Sleep(interval);
+                elapsed += interval;
+            }
         }
 
         public void StopGame()
@@ -417,11 +438,12 @@ namespace HopiBot.Game
             StopPlay();
             _healthThread?.Abort();
             _healthThread?.Join();
+            _cts?.Cancel();
         }
 
         private void UpdatePlayerInfo()
         {
-            _mainWindow.UpdatePlayerInfo(_isUnderAttack, _isLowHealth, _action, _isDead, _position.ToString());
+            _mainWindow.UpdatePlayerInfo(_isUnderAttack, _isLowHealth, _action, _isDead, _position.ToString(), _lastHealth.ToString());
         }
     }
 

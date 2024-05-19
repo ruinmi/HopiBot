@@ -42,6 +42,7 @@ namespace HopiBot.Game
                         _isAccepted = false;
                         break;
                     case GamePhase.Matchmaking:
+                        _isAccepted = false;
                         break;
                     case GamePhase.ReadyCheck:
                         if (_isAccepted) break;
