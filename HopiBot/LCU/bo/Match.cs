@@ -51,8 +51,8 @@ namespace HopiBot.LCU.bo
             // 大乱斗
             if (mapId == 12)
             {
-                score = 3 * normalizedKills - 7 * normalizedDeaths + 0.3 * normalizedAssists + 1.0 * normalizedGoldEarned + 1.7 * normalizedDamageDealt + 1.7 * normalizedDamageTaken + 0.02 * normalizedMinionsKilled + 0.004 * level;
-                return score * 10;
+                score = 3 * normalizedKills - 5 * normalizedDeaths + 0.3 * normalizedAssists + 1.0 * normalizedGoldEarned + 1.5 * normalizedDamageDealt + 1.5 * normalizedDamageTaken + 0.02 * normalizedMinionsKilled + 0.004 * level;
+                return score * 10 > 17.2 ? 17.2 : score * 10;
             }
 
             if (Timeline.Lane == "TOP" || Timeline.Lane == "MIDDLE" || (Timeline.Lane == "BOTTOM" && Timeline.Role == "DUO"))
