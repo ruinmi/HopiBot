@@ -6,7 +6,7 @@ using HopiBot.LCU;
 
 namespace HopiBot.Game
 {
-    public class ScoreService
+    public static class ScoreService
     {
         /// <summary>
         /// 得到两个队伍所有玩家的平均分数
@@ -22,8 +22,8 @@ namespace HopiBot.Game
 
             var result = new Dictionary<string, List<Tuple<string, double>>>
             {
-                { "ally", FormatScores(CalculateScore(ally)) },
-                { "enemy", FormatScores(CalculateScore(enemy)) }
+                { "ally", FormatScores(CalculateTeamScore(ally)) },
+                { "enemy", FormatScores(CalculateTeamScore(enemy)) }
             };
             return result;
         }
@@ -33,7 +33,7 @@ namespace HopiBot.Game
         /// </summary>
         /// <param name="teamPuuid">队伍所有人的puuid</param>
         /// <returns></returns>
-        public static List<Tuple<string, double>> CalculateScore(List<string> teamPuuid)
+        public static List<Tuple<string, double>> CalculateTeamScore(List<string> teamPuuid)
         {
             var list = teamPuuid.Select(CalculateAvgScore).ToList();
             list.Sort((a, b) => b.Item2.CompareTo(a.Item2));
@@ -48,40 +48,21 @@ namespace HopiBot.Game
         public static Tuple<string, double> CalculateAvgScore(string puuid)
         {
             var name = ClientApi.GetSummoner(puuid).DisplayName;
-            var matches = ClientApi.GetMatchesByPuuid(puuid);
-            // 计算平均分数（去掉最高、去掉最低）
+            var matches = ClientApi.GetMatchesByPuuid(puuid).FindAll(m => m.MapId == 11 || m.MapId == 12); // 只计算召唤师峡谷和大乱斗
+            Logger.Log($"计算玩家分数{name} 共{matches.Count}场比赛");
+            // 计算平均分数
             var scores = new List<double>();
             foreach (var match in matches)
             {
-                if (match.GameMode != "CLASSIC" || match.GameType != "MATCHED_GAME") continue;
-                var m = ClientApi.GetMatch(match.GameId);
-                var participantId = 0;
-                foreach (var mParticipantIdentity in m.ParticipantIdentities)
-                {
-                    if (puuid == mParticipantIdentity.Player.Puuid)
-                    {
-                        participantId = mParticipantIdentity.ParticipantId;
-                    }
-                }
-
-                foreach (var participant in m.Participants)
-                {
-                    if (participantId == participant.ParticipantId)
-                    {
-                        var score = participant.CalculateScore(match.GameDuration);
-                        scores.Add(score);
-                    }
-                }
+                // 获取比赛完整数据
+                if (!match.Participants.Any()) continue;
+                var score = match.Participants[0].CalculateScore(match.GameDuration);
+                Logger.Log($"比赛: {match.GameMode} {DateTimeOffset.FromUnixTimeMilliseconds(match.GameCreation).ToLocalTime()} 分数: {score}");
+                scores.Add(score);
             }
 
             scores.Sort();
-            var avg = 0.0;
-            if (scores.Count > 2)
-            {
-                scores.RemoveAt(0);
-                scores.RemoveAt(scores.Count - 1);
-                avg = scores.Average();
-            }
+            var avg = scores.Average();
 
             return Tuple.Create(name, avg);
         }
