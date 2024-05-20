@@ -212,9 +212,8 @@ namespace HopiBot.LCU
         public static List<Match> GetMatchesByPuuid(string puuid, int beginIdx = 0, int endIdx = 10)
         {
             var response = LcuManager.Instance.GetClient($"/lol-match-history/v1/products/lol/{puuid}/matches?begIndex={beginIdx}&endIndex={endIdx}", 5000);
-            var m = JObject.Parse(response.Content);
-            var matches = JsonConvert.DeserializeObject<List<Match>>(m["games"]["games"].ToString());
-            return matches;
+            var matches = JsonConvert.DeserializeObject<List<Match>>(JObject.Parse(response.Content)["games"]["games"].ToString());
+            return matches.FindAll(m => (m.MapId == 11 && m.GameMode == "CLASSIC") || m.MapId == 12); // 只计算召唤师峡谷和大乱斗
         }
 
         public static Summoner GetSummoner(string puuid)

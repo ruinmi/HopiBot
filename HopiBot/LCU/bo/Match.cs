@@ -35,7 +35,7 @@ namespace HopiBot.LCU.bo
         public int TeamId { get; set; }
         public Timeline Timeline { get; set; }
 
-        public double CalculateScore(long duration)
+        public double CalculateScore(int mapId, long duration)
         {
             double normalizedKills = (double)Stats.Kills / duration * 10;
             double normalizedDeaths = (double)Stats.Deaths / duration * 10;
@@ -45,20 +45,26 @@ namespace HopiBot.LCU.bo
             double normalizedDamageTaken = ((double)Stats.TotalDamageTaken / duration) / 1000 * 10;
             double normalizedMinionsKilled = (double)Stats.TotalMinionsKilled / duration;
             var level = Stats.ChampLevel;
-            double winBonus = 0;
 
             double score = 0;
+
+            // 大乱斗
+            if (mapId == 12)
+            {
+                score = 3 * normalizedKills - 7 * normalizedDeaths + 0.3 * normalizedAssists + 1.0 * normalizedGoldEarned + 1.7 * normalizedDamageDealt + 1.7 * normalizedDamageTaken + 0.02 * normalizedMinionsKilled + 0.004 * level;
+                return score * 10;
+            }
 
             if (Timeline.Lane == "TOP" || Timeline.Lane == "MIDDLE" || (Timeline.Lane == "BOTTOM" && Timeline.Role == "DUO"))
             {
                 // 上单或中单
                 if (normalizedDamageDealt > normalizedDamageTaken) // 输出型
                 {
-                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.7 * normalizedAssists + 1.0 * normalizedGoldEarned + 1.1 * normalizedDamageDealt + 4 * normalizedDamageTaken + 1.0 * normalizedMinionsKilled + winBonus + 0.004 * level;
+                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.7 * normalizedAssists + 1.0 * normalizedGoldEarned + 1.1 * normalizedDamageDealt + 4 * normalizedDamageTaken + 1.0 * normalizedMinionsKilled + 0.004 * level;
                 }
                 else
                 {
-                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.7 * normalizedAssists + 1.0 * normalizedGoldEarned + 4 * normalizedDamageDealt + 1.1 * normalizedDamageTaken + 1.0 * normalizedMinionsKilled + winBonus + 0.004 * level;
+                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.7 * normalizedAssists + 1.0 * normalizedGoldEarned + 4 * normalizedDamageDealt + 1.1 * normalizedDamageTaken + 1.0 * normalizedMinionsKilled + 0.004 * level;
                 }
             }
             else if (Timeline.Lane == "JUNGLE")
@@ -66,11 +72,11 @@ namespace HopiBot.LCU.bo
                 // 打野
                 if (normalizedDamageDealt > normalizedDamageTaken) // 输出型
                 {
-                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.6 * normalizedAssists + 1.1 * normalizedGoldEarned + 3.2 * normalizedDamageDealt + 1.1 * normalizedDamageTaken + 0.8 * normalizedMinionsKilled + winBonus + 0.004 * level;
+                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.6 * normalizedAssists + 1.1 * normalizedGoldEarned + 3.9 * normalizedDamageDealt + 1.5 * normalizedDamageTaken + 0.8 * normalizedMinionsKilled + 0.004 * level;
                 }
                 else
                 {
-                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.6 * normalizedAssists + 1.1 * normalizedGoldEarned + 1.1 * normalizedDamageDealt + 3.2 * normalizedDamageTaken + 0.8 * normalizedMinionsKilled + winBonus + 0.004 * level;
+                    score = 3 * normalizedKills - 7 * normalizedDeaths + 0.6 * normalizedAssists + 1.1 * normalizedGoldEarned + 1.5 * normalizedDamageDealt + 3.9 * normalizedDamageTaken + 0.8 * normalizedMinionsKilled + 0.004 * level;
                 }
             }
             else
@@ -78,18 +84,18 @@ namespace HopiBot.LCU.bo
                 if (Timeline.Role == "CARRY")
                 {
                     // ADC
-                    score = 4 * normalizedKills - 8 * normalizedDeaths + 0.5 * normalizedAssists + 1.1 * normalizedGoldEarned + 4 * normalizedDamageDealt + 0.8 * normalizedMinionsKilled + winBonus + 0.003 * level;
+                    score = 4 * normalizedKills - 8 * normalizedDeaths + 0.5 * normalizedAssists + 1.1 * normalizedGoldEarned + 4 * normalizedDamageDealt + 0.8 * normalizedMinionsKilled + 0.003 * level;
                 }
                 else if (Timeline.Role == "SUPPORT" || Timeline.Role == "SOLO")
                 {
                     // 辅助
                     if (normalizedDamageDealt > normalizedDamageTaken) // 输出型
                     {
-                        score = 0.8 * normalizedKills - 7 * normalizedDeaths + 5 * normalizedAssists + 0.6 * normalizedGoldEarned + 3 * normalizedDamageDealt + 0.2 * normalizedDamageTaken + 0.3 * normalizedMinionsKilled + winBonus + 0.002 * level;
+                        score = 0.8 * normalizedKills - 7 * normalizedDeaths + 5 * normalizedAssists + 0.6 * normalizedGoldEarned + 3 * normalizedDamageDealt + 0.2 * normalizedDamageTaken + 0.3 * normalizedMinionsKilled + 0.002 * level;
                     }
                     else
                     {
-                        score = 0.8 * normalizedKills - 7 * normalizedDeaths + 6 * normalizedAssists + 0.6 * normalizedGoldEarned + 0.2 * normalizedDamageDealt + 3 * normalizedDamageTaken + 0.3 * normalizedMinionsKilled + winBonus + 0.002 * level;
+                        score = 0.8 * normalizedKills - 7 * normalizedDeaths + 6 * normalizedAssists + 0.6 * normalizedGoldEarned + 0.2 * normalizedDamageDealt + 3 * normalizedDamageTaken + 0.3 * normalizedMinionsKilled + 0.002 * level;
                     }
                 }
             }

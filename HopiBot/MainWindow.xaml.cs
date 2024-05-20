@@ -60,7 +60,7 @@ namespace HopiBot
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        ScoreService.CalculateAvgScore(ClientApi.GetMyPuuid());
+                        Logger.Log(ScoreService.CalculateAvgScore(ClientApi.GetMyPuuid()).ToString());
                     });
                 }
             };

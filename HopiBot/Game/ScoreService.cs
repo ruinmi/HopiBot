@@ -48,7 +48,7 @@ namespace HopiBot.Game
         public static Tuple<string, double> CalculateAvgScore(string puuid)
         {
             var name = ClientApi.GetSummoner(puuid).DisplayName;
-            var matches = ClientApi.GetMatchesByPuuid(puuid).FindAll(m => m.MapId == 11 || m.MapId == 12); // 只计算召唤师峡谷和大乱斗
+            var matches = ClientApi.GetMatchesByPuuid(puuid).FindAll(m => m.GameDuration > 900); // 大于15min的对局
             Logger.Log($"计算玩家分数{name} 共{matches.Count}场比赛");
             // 计算平均分数
             var scores = new List<double>();
@@ -56,7 +56,7 @@ namespace HopiBot.Game
             {
                 // 获取比赛完整数据
                 if (!match.Participants.Any()) continue;
-                var score = match.Participants[0].CalculateScore(match.GameDuration);
+                var score = match.Participants[0].CalculateScore(match.MapId, match.GameDuration);
                 Logger.Log($"比赛: {match.GameMode} {DateTimeOffset.FromUnixTimeMilliseconds(match.GameCreation).ToLocalTime()} 分数: {score}");
                 scores.Add(score);
             }
