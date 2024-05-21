@@ -16,7 +16,7 @@ namespace HopiBot.Game
         #region Game State
 
         private CancellationTokenSource _ctsPlay;
-        private CancellationTokenSource _cts;
+        private bool _isStopped;
         private Task _healthTask;
         private Task _playTask;
 
@@ -75,51 +75,49 @@ namespace HopiBot.Game
             Position = Position.InBase;
         }
 
-        public void Start()
+        public async Task Start()
         {
-            _cts = new CancellationTokenSource();
-            _healthTask = Task.Run(HealthCheck, _cts.Token);
+            _healthTask = Task.Run(HealthCheck);
 
-            Task.Run(async () =>
+
+            // 游戏20s后开始
+            var isLocked = false;
+            while (!isLocked)
             {
-                // 游戏20s后开始
-                var isLocked = false;
-                while (!isLocked)
+                await Task.Delay(2000);
+                var gameTime = GameApi.GetGameTime();
+                if (gameTime < 20) continue;
+                Controller.LockScreen();
+                isLocked = true;
+            }
+
+            // 游戏开始，监听游戏是否结束、是否死亡
+            while (true)
+            {
+                if (_isStopped) break;
+
+                await Task.Delay(2000);
+                var phase = ClientApi.GetGamePhase();
+                if (phase != GamePhase.InProgress)
                 {
-                    await Task.Delay(2000);
-                    var gameTime = GameApi.GetGameTime();
-                    if (gameTime < 20) continue;
-                    Controller.LockScreen();
-                    isLocked = true;
+                    Logger.Log("Game End");
+                    StopGame();
+                    break;
                 }
 
-                // 游戏开始，监听游戏是否结束、是否死亡
-                while (true)
+                IsDead = _lastHealth <= 0;
+                if (IsDead)
                 {
-                    await Task.Delay(2000);
-                    var phase = ClientApi.GetGamePhase();
-                    if (phase != GamePhase.InProgress)
-                    {
-                        Logger.Log("Game End");
-                        StopGame();
-                        break;
-                    }
-
-                    IsDead = _lastHealth <= 0;
-                    if (IsDead)
-                    {
-                        StopPlay();
-                    }
-                    else if (_playTask == null || _playTask.IsCompleted)
-                    {
-                        _ctsPlay = new CancellationTokenSource();
-                        _playTask = Task.Run(() => Play(_ctsPlay.Token), _ctsPlay.Token);
-                    }
-
-                    if (_cts.IsCancellationRequested) break;
+                    StopPlay();
                 }
-            });
+                else if (_playTask == null && !_isStopped)
+                {
+                    _ctsPlay = new CancellationTokenSource();
+                    _playTask = Task.Run(() => Play(_ctsPlay.Token), _ctsPlay.Token);
+                }
+            }
         }
+
 
         /// <summary>
         /// 开始游戏
@@ -153,7 +151,7 @@ namespace HopiBot.Game
                             await MoveToTurretMid(2 * 1000, token);
                         }
 
-                        Attack();
+                        await Attack(token);
                     }
 
                     await MoveToTurretMid(3 * 1000, token);
@@ -189,7 +187,9 @@ namespace HopiBot.Game
             }
             var events = data.ToList();
             events.Sort((a, b) => b["EventID"].ToObject<int>() - a["EventID"].ToObject<int>());
-            foreach (var turret in events.Select(e => e["TurretKilled"].ToString()))
+            foreach (var turret in from e in events
+                     where e["EventName"]?.ToString() == "TurretKilled"
+                     select e["TurretKilled"].ToString())
             {
                 switch (turret)
                 {
@@ -231,15 +231,15 @@ namespace HopiBot.Game
         /// <summary>
         /// 平A、用Q、W（耗时约500ms）
         /// </summary>
-        private void Attack()
+        private async Task Attack(CancellationToken token)
         {
             Keyboard.KeyPress(Keys.A, 50);
             Controller.LeftClick(Controller.CenterOfScreen.Add(20, -150));
-            Thread.Sleep(100);
+            await SleepWithCancellation(100, token);
             Controller.LeftClick(Controller.CenterOfScreen.Add(380, -290));
-            Thread.Sleep(100);
+            await SleepWithCancellation(100, token);
             Keyboard.KeyPress(Keys.E, 50);
-            Thread.Sleep(100);
+            await SleepWithCancellation(100, token);
             Keyboard.KeyPress(Keys.Q, 50);
         }
 
@@ -344,7 +344,7 @@ namespace HopiBot.Game
         public void StopGame()
         {
             StopPlay();
-            _cts?.Cancel();
+            _isStopped = true;
         }
 
         private void UpdatePlayerInfo()

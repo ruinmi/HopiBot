@@ -11,6 +11,7 @@ namespace HopiBot.Game
         private MainWindow _mainWindow;
         public Champion Champ;
         private Game _game;
+        private bool _isStopped;
 
         private bool _isAccepted;
         private bool _isChampSelected;
@@ -28,10 +29,11 @@ namespace HopiBot.Game
             GamePhaseListening();
         }
 
-        private void GamePhaseListening()
+        private async void GamePhaseListening()
         {
             while (true)
             {
+                if (_isStopped) return;
                 var phase = ClientApi.GetGamePhase();
                 switch (phase)
                 {
@@ -58,7 +60,7 @@ namespace HopiBot.Game
                     case GamePhase.InProgress:
                         Logger.Log("===============================Start of Game===============================");
                         _game = new Game(_mainWindow);
-                        _game.Start();
+                        await _game.Start();
                         break;
                     case GamePhase.PreEndOfGame:
                         Thread.Sleep(3000);
@@ -84,6 +86,7 @@ namespace HopiBot.Game
 
         public void Shutdown()
         {
+            _isStopped = true;
             _game?.StopGame();
         }
     }

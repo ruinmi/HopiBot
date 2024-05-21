@@ -43,6 +43,7 @@ namespace HopiBot.LCU
                 }
             }
 
+            Logger.Log($"https://127.0.0.1:{_port} \nToken: {_token}");
             var options = new RestClientOptions($"https://127.0.0.1:{_port}")
             {
                 Authenticator = new HttpBasicAuthenticator("riot", _token),

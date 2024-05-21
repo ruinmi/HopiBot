@@ -62,7 +62,7 @@ namespace HopiBot.Game
             }
 
             scores.Sort();
-            var avg = scores.Average();
+            var avg = scores.Count > 0 ? scores.Average() : 0;
 
             return Tuple.Create(name, avg);
         }
