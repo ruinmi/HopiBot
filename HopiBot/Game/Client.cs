@@ -16,6 +16,9 @@ namespace HopiBot.Game
         private bool _isAccepted;
         private bool _isChampSelected;
 
+        public int _roundCount;
+        public int _roundLimit;
+
         public Client(MainWindow mainWindow)
         {
             _mainWindow = mainWindow;
@@ -26,6 +29,13 @@ namespace HopiBot.Game
             var phase = ClientApi.GetGamePhase();
             if (phase == GamePhase.None) ClientApi.CreateBotLobby();
 
+            _roundCount = 0;
+            Application.Current.Dispatcher.Invoke(() => {
+                if (!int.TryParse(_mainWindow.roundLimit.Text, out _roundLimit))
+                {
+                    _roundLimit = 1;
+                }
+            });
             GamePhaseListening();
         }
 
@@ -33,7 +43,13 @@ namespace HopiBot.Game
         {
             while (true)
             {
-                if (_isStopped) return;
+                if (_isStopped || _roundCount >= _roundLimit) {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        _mainWindow.Stop();
+                    });
+                    return; 
+                }
                 var phase = ClientApi.GetGamePhase();
                 switch (phase)
                 {
@@ -64,9 +80,12 @@ namespace HopiBot.Game
                         break;
                     case GamePhase.PreEndOfGame:
                         Thread.Sleep(3000);
-                        Controller.LeftClickClient(638, 680);
+                        for (int i = 0; i < 12; i++)
+                        {
+                            Controller.LeftClickClient(800, 300 + i * 50);
+                        }
                         Thread.Sleep(1000);
-                        ClientApi.HonorPlayer();
+                        Controller.LeftClickClient(638, 680);
                         break;
                     case GamePhase.WaitingForStats:
                         break;
@@ -76,6 +95,7 @@ namespace HopiBot.Game
                         Thread.Sleep(2000);
                         var isPlayAgain = ClientApi.PlayAgain();
                         if (!isPlayAgain) return;
+                        _roundCount += 1;
                         Thread.Sleep(2000);
                         Logger.Log("===============================End of Game===============================");
                         break;

@@ -1,4 +1,6 @@
-﻿using HopiBot.LCU.bo;
+﻿using System.Collections.Generic;
+using System.Linq;
+using HopiBot.LCU.bo;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -38,7 +40,7 @@ namespace HopiBot.LCU
         {
             try
             {
-                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+                var myData = GetMyData();
                 var myId = myData["riotId"];
                 var players = JToken.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/playerlist?teamID=100").Content);
                 foreach (var player in players)
@@ -61,7 +63,10 @@ namespace HopiBot.LCU
         {
             try
             {
-                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+                var myData = GetMyData();
+                if (myData == null) return -1;
+                var s = myData.GetValue("championStats");
+                if (s == null) return -1;
                 var currentHealth = myData["championStats"]["currentHealth"].ToObject<int>();
                 return currentHealth;
             }
@@ -79,7 +84,7 @@ namespace HopiBot.LCU
         {
             try
             {
-                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+                var myData = GetMyData();
                 var currentHealth = myData["championStats"]["currentHealth"].ToObject<int>();
                 var maxHealth = myData["championStats"]["maxHealth"].ToObject<int>();
                 return currentHealth * 100 / maxHealth;
@@ -94,7 +99,7 @@ namespace HopiBot.LCU
         {
             try
             {
-                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+                var myData = GetMyData();
                 var level = myData["level"].ToObject<int>();
                 return level;
             }
@@ -108,9 +113,42 @@ namespace HopiBot.LCU
         {
             try
             {
-                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+                var myData = GetMyData();
                 var abilities = myData["abilities"].ToString();
                 return JsonConvert.DeserializeObject<Abilities>(abilities);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static List<string> GetEnemyChampions()
+        {
+            try
+            {
+                var myData = GetMyData();
+                var myRiotId = myData["riotId"];
+                var orderPlayers = JToken.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/playerlist?teamID=ORDER").Content);
+                var chaosPlayers = JToken.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/playerlist?teamID=CHAOS").Content);
+
+                var enemyPlayers = orderPlayers.All(orderPlayer => orderPlayer["riotId"].ToString() != myRiotId.ToString()) ? orderPlayers : chaosPlayers;
+
+                return enemyPlayers.Select(player => player["rawChampionName"].ToString().Replace("game_character_displayname_", "")).Where(name => !name.Contains("Dummy")).ToList();
+            }
+            catch
+            {
+                return new List<string>();
+            }
+        }
+
+        public static JObject GetMyData()
+        {
+            try
+            {
+                var myData = JObject.Parse(LcuManager.Instance.GetGameClient("/liveclientdata/activeplayer").Content);
+
+                return myData;
             }
             catch
             {

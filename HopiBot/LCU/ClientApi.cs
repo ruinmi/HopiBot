@@ -23,7 +23,7 @@ namespace HopiBot.LCU
             }
         }
 
-        public static bool CreateBotLobby(int difficulty = 3)
+        public static bool CreateBotLobby(int difficulty = 1)
         {
             var queueId = 0;
             switch (difficulty)
@@ -186,7 +186,7 @@ namespace HopiBot.LCU
             try
             {
                 var eligiblePlayers = JObject.Parse(LcuManager.Instance.GetClient("/lol-honor-v2/v1/ballot").Content)["eligiblePlayers"];
-                if (!eligiblePlayers.Any()) return;
+                if (eligiblePlayers == null || !eligiblePlayers.Any()) return;
                 var data = new {summonerId = eligiblePlayers[0]["summonerId"].ToObject<long>()};
                 LcuManager.Instance.PostClient("/lol-honor-v2/v1/honor-player", data);
                 Logger.Log("honor player: " + eligiblePlayers[0]["summonerId"]);
@@ -252,6 +252,13 @@ namespace HopiBot.LCU
             result["teamOne"] = teamOnePuuid;
             result["teamTwo"] = teamTwoPuuid;
             return result;
+        }
+
+        public static int GetMyXpUntilNextLevel()
+        {
+            var puuid = GetMyPuuid();
+            var xp = JObject.Parse(LcuManager.Instance.GetClient($"/lol-summoner/v2/summoners/puuid/{puuid}").Content)["xpUntilNextLevel"];
+            return xp.ToObject<int>();
         }
     }
 }

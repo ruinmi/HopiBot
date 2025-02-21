@@ -1,171 +1,93 @@
-﻿#region License Information (GPL v3)
-
-/*
-    ShareX - A program that allows you to take screenshots and share any file type
-    Copyright (c) 2007-2024 ShareX Team
-
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-    Optionally you can also view the license at <http://www.gnu.org/licenses/>.
-*/
-
-#endregion License Information (GPL v3)
-
-using ShareX.HelpersLib;
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Threading.Tasks;
+using SharpDX;
+using SharpDX.DXGI;
+using SharpDX.Direct3D11;
+using Device = SharpDX.Direct3D11.Device;
+using MapFlags = SharpDX.Direct3D11.MapFlags;
 
-namespace ShareX.ScreenCaptureLib
+namespace HopiBot.Hack.Utils
 {
-    public partial class Screenshot
+    public class ScreenCapture
     {
-        public bool CaptureCursor { get; set; } = false;
-        public bool CaptureClientArea { get; set; } = false;
-        public bool RemoveOutsideScreenArea { get; set; } = true;
-        public bool CaptureShadow { get; set; } = false;
-        public int ShadowOffset { get; set; } = 20;
-        public bool AutoHideTaskbar { get; set; } = false;
+        private readonly Device _device;
+        private readonly OutputDuplication _outputDuplication;
+        private readonly Texture2DDescription _textureDesc;
 
-        public Bitmap CaptureRectangle(Rectangle rect)
+        public ScreenCapture()
         {
-            if (RemoveOutsideScreenArea)
+            var adapter = new Factory1().GetAdapter1(0);
+            _device = new Device(adapter);
+            var output = adapter.GetOutput(0);
+            var output1 = output.QueryInterface<Output1>();
+            var desktopBounds = output.Description.DesktopBounds;
+            int width = desktopBounds.Right - desktopBounds.Left;
+            int height = desktopBounds.Bottom - desktopBounds.Top;
+            _textureDesc = new Texture2DDescription
             {
-                Rectangle bounds = CaptureHelpers.GetScreenBounds();
-                rect = Rectangle.Intersect(bounds, rect);
-            }
-
-            return CaptureRectangleNative(rect, CaptureCursor);
+                CpuAccessFlags = CpuAccessFlags.Read,
+                BindFlags = BindFlags.None,
+                Format = Format.B8G8R8A8_UNorm,
+                Width = width,
+                Height = height,
+                OptionFlags = ResourceOptionFlags.None,
+                MipLevels = 1,
+                ArraySize = 1,
+                SampleDescription = { Count = 1, Quality = 0 },
+                Usage = ResourceUsage.Staging
+            };
+            _outputDuplication = output1.DuplicateOutput(_device);
         }
 
-        public Bitmap CaptureFullscreen()
+        public async Task CaptureScreenPeriodically(int intervalInMilliseconds, Action<Bitmap> onCapture)
         {
-            Rectangle bounds = CaptureHelpers.GetScreenBounds();
-
-            return CaptureRectangle(bounds);
-        }
-
-        public Bitmap CaptureWindow(IntPtr handle)
-        {
-            if (handle.ToInt32() > 0)
+            while (true)
             {
-                Rectangle rect;
-
-                if (CaptureClientArea)
-                {
-                    rect = NativeMethods.GetClientRect(handle);
-                }
-                else
-                {
-                    rect = CaptureHelpers.GetWindowRectangle(handle);
-                }
-
-                bool isTaskbarHide = false;
-
-                try
-                {
-                    if (AutoHideTaskbar)
-                    {
-                        isTaskbarHide = NativeMethods.SetTaskbarVisibilityIfIntersect(false, rect);
-                    }
-
-                    return CaptureRectangle(rect);
-                }
-                finally
-                {
-                    if (isTaskbarHide)
-                    {
-                        NativeMethods.SetTaskbarVisibility(true);
-                    }
-                }
+                var bitmap = await CaptureScreenAsync();
+                onCapture?.Invoke(bitmap);
+                await Task.Delay(intervalInMilliseconds);
             }
-
-            return null;
         }
 
-        public Bitmap CaptureActiveWindow()
+        private Task<Bitmap> CaptureScreenAsync()
         {
-            IntPtr handle = NativeMethods.GetForegroundWindow();
-
-            return CaptureWindow(handle);
+            return Task.Run(CaptureScreen);
         }
 
-        public Bitmap CaptureActiveMonitor()
+        private Bitmap CaptureScreen()
         {
-            Rectangle bounds = CaptureHelpers.GetActiveScreenBounds();
+            SharpDX.DXGI.Resource desktopResource;
 
-            return CaptureRectangle(bounds);
-        }
-
-        private Bitmap CaptureRectangleNative(Rectangle rect, bool captureCursor = false)
-        {
-            IntPtr handle = NativeMethods.GetDesktopWindow();
-            return CaptureRectangleNative(handle, rect, captureCursor);
-        }
-
-        private Bitmap CaptureRectangleNative(IntPtr handle, Rectangle rect, bool captureCursor = false)
-        {
-            if (rect.Width == 0 || rect.Height == 0)
+            _outputDuplication.AcquireNextFrame(1000, out _, out desktopResource);
+            using (var screenTexture = desktopResource.QueryInterface<Texture2D>())
             {
-                return null;
-            }
+                var stagingTexture = new Texture2D(_device, _textureDesc);
+                _device.ImmediateContext.CopyResource(screenTexture, stagingTexture);
 
-            IntPtr hdcSrc = NativeMethods.GetWindowDC(handle);
-            IntPtr hdcDest = NativeMethods.CreateCompatibleDC(hdcSrc);
-            IntPtr hBitmap = NativeMethods.CreateCompatibleBitmap(hdcSrc, rect.Width, rect.Height);
-            IntPtr hOld = NativeMethods.SelectObject(hdcDest, hBitmap);
-            NativeMethods.BitBlt(hdcDest, 0, 0, rect.Width, rect.Height, hdcSrc, rect.X, rect.Y, CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
+                var mapSource = _device.ImmediateContext.MapSubresource(stagingTexture, 0, MapMode.Read, MapFlags.None);
 
-            if (captureCursor)
-            {
-                try
+                var bitmap = new Bitmap(_textureDesc.Width, _textureDesc.Height, PixelFormat.Format32bppArgb);
+                var boundsRect = new Rectangle(0, 0, _textureDesc.Width, _textureDesc.Height);
+
+                var mapDest = bitmap.LockBits(boundsRect, ImageLockMode.WriteOnly, bitmap.PixelFormat);
+                var sourcePtr = mapSource.DataPointer;
+                var destPtr = mapDest.Scan0;
+
+                for (int y = 0; y < _textureDesc.Height; y++)
                 {
-                    CursorData cursorData = new CursorData();
-                    cursorData.DrawCursor(hdcDest, rect.Location);
+                    Utilities.CopyMemory(destPtr, sourcePtr, _textureDesc.Width * 4);
+                    sourcePtr = IntPtr.Add(sourcePtr, mapSource.RowPitch);
+                    destPtr = IntPtr.Add(destPtr, mapDest.Stride);
                 }
-                catch (Exception e)
-                {
-                    DebugHelper.WriteException(e, "Cursor capture failed.");
-                }
+
+                bitmap.UnlockBits(mapDest);
+                _device.ImmediateContext.UnmapSubresource(stagingTexture, 0);
+
+                _outputDuplication.ReleaseFrame();
+                return bitmap;
             }
-
-            NativeMethods.SelectObject(hdcDest, hOld);
-            NativeMethods.DeleteDC(hdcDest);
-            NativeMethods.ReleaseDC(handle, hdcSrc);
-            Bitmap bmp = Image.FromHbitmap(hBitmap);
-            NativeMethods.DeleteObject(hBitmap);
-
-            return bmp;
-        }
-
-        private Bitmap CaptureRectangleManaged(Rectangle rect)
-        {
-            if (rect.Width == 0 || rect.Height == 0)
-            {
-                return null;
-            }
-
-            Bitmap bmp = new Bitmap(rect.Width, rect.Height, PixelFormat.Format24bppRgb);
-
-            using (Graphics g = Graphics.FromImage(bmp))
-            {
-                // Managed can't use SourceCopy | CaptureBlt because of .NET bug
-                g.CopyFromScreen(rect.Location, Point.Empty, rect.Size, CopyPixelOperation.SourceCopy);
-            }
-
-            return bmp;
         }
     }
 }

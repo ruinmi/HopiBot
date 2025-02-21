@@ -1,0 +1,220 @@
+﻿{
+  "activePlayer": {
+    "abilities": {
+      "E": {
+        "abilityLevel": 0,
+        "displayName": "勇往直前",
+        "id": "RivenFeint",
+        "rawDescription": "GeneratedTip_Spell_RivenFeint_Description",
+        "rawDisplayName": "GeneratedTip_Spell_RivenFeint_DisplayName"
+      },
+      "Passive": {
+        "displayName": "符文之刃",
+        "id": "RivenPassive",
+        "rawDescription": "GeneratedTip_Passive_RivenPassive_Description",
+        "rawDisplayName": "GeneratedTip_Passive_RivenPassive_DisplayName"
+      },
+      "Q": {
+        "abilityLevel": 0,
+        "displayName": "折翼之舞",
+        "id": "RivenTriCleave",
+        "rawDescription": "GeneratedTip_Spell_RivenTriCleave_Description",
+        "rawDisplayName": "GeneratedTip_Spell_RivenTriCleave_DisplayName"
+      },
+      "R": {
+        "abilityLevel": 0,
+        "displayName": "放逐之锋",
+        "id": "RivenFengShuiEngine",
+        "rawDescription": "GeneratedTip_Spell_RivenFengShuiEngine_Description",
+        "rawDisplayName": "GeneratedTip_Spell_RivenFengShuiEngine_DisplayName"
+      },
+      "W": {
+        "abilityLevel": 0,
+        "displayName": "震魂怒吼",
+        "id": "RivenMartyr",
+        "rawDescription": "GeneratedTip_Spell_RivenMartyr_Description",
+        "rawDisplayName": "GeneratedTip_Spell_RivenMartyr_DisplayName"
+      }
+    },
+    "championStats": {
+      "abilityHaste": 0.0,
+      "abilityPower": 0.0,
+      "armor": 33.0,
+      "armorPenetrationFlat": 0.0,
+      "armorPenetrationPercent": 1.0,
+      "attackDamage": 25.0,
+      "attackRange": 0.0,
+      "attackSpeed": 0.625,
+      "bonusArmorPenetrationPercent": 1.0,
+      "bonusMagicPenetrationPercent": 1.0,
+      "critChance": 0.0,
+      "critDamage": 0.0,
+      "currentHealth": 630.0,
+      "healShieldPower": 0.0,
+      "healthRegenRate": 0.0,
+      "lifeSteal": 0.0,
+      "magicLethality": 0.0,
+      "magicPenetrationFlat": 0.0,
+      "magicPenetrationPercent": 1.0,
+      "magicResist": 32.0,
+      "maxHealth": 630.0,
+      "moveSpeed": 340.0,
+      "omnivamp": 0.0,
+      "physicalLethality": 0.0,
+      "physicalVamp": 0.0,
+      "resourceMax": 0.0,
+      "resourceRegenRate": 0.0,
+      "resourceType": "NONE",
+      "resourceValue": 0.0,
+      "spellVamp": 0.0,
+      "tenacity": 5.0
+    },
+    "currentGold": 0.0,
+    "fullRunes": {
+      "generalRunes": [
+        {
+          "displayName": "迅捷步法",
+          "id": 8021,
+          "rawDescription": "perk_tooltip_FleetFootwork",
+          "rawDisplayName": "perk_displayname_FleetFootwork"
+        },
+        {
+          "displayName": "凯旋",
+          "id": 9111,
+          "rawDescription": "perk_tooltip_9111",
+          "rawDisplayName": "perk_displayname_9111"
+        },
+        {
+          "displayName": "传说：欢欣",
+          "id": 9104,
+          "rawDescription": "perk_tooltip_9104",
+          "rawDisplayName": "perk_displayname_9104"
+        },
+        {
+          "displayName": "致命一击",
+          "id": 8014,
+          "rawDescription": "perk_tooltip_CoupDeGrace",
+          "rawDisplayName": "perk_displayname_CoupDeGrace"
+        },
+        {
+          "displayName": "迅捷",
+          "id": 8234,
+          "rawDescription": "perk_tooltip_Celerity",
+          "rawDisplayName": "perk_displayname_Celerity"
+        },
+        {
+          "displayName": "风暴聚集",
+          "id": 8236,
+          "rawDescription": "perk_tooltip_GatheringStorm",
+          "rawDisplayName": "perk_displayname_GatheringStorm"
+        }
+      ],
+      "keystone": {
+        "displayName": "迅捷步法",
+        "id": 8021,
+        "rawDescription": "perk_tooltip_FleetFootwork",
+        "rawDisplayName": "perk_displayname_FleetFootwork"
+      },
+      "primaryRuneTree": {
+        "displayName": "精密",
+        "id": 8000,
+        "rawDescription": "perkstyle_tooltip_7201",
+        "rawDisplayName": "perkstyle_displayname_7201"
+      },
+      "secondaryRuneTree": {
+        "displayName": "巫术",
+        "id": 8200,
+        "rawDescription": "perkstyle_tooltip_7202",
+        "rawDisplayName": "perkstyle_displayname_7202"
+      },
+      "statRunes": [
+        {
+          "id": 5005,
+          "rawDescription": "perk_tooltip_StatModAttackSpeed"
+        },
+        {
+          "id": 5008,
+          "rawDescription": "perk_tooltip_StatModAdaptive"
+        },
+        {
+          "id": 5001,
+          "rawDescription": "perk_tooltip_StatModHealthScaling"
+        }
+      ]
+    },
+    "level": 1,
+    "riotId": "51华氏#57446",
+    "riotIdGameName": "51华氏",
+    "riotIdTagLine": "57446",
+    "summonerName": "51华氏#57446",
+    "teamRelativeColors": true
+  },
+  "allPlayers": [
+    {
+      "championName": "放逐之刃",
+      "isBot": false,
+      "isDead": false,
+      "items": [],
+      "level": 1,
+      "position": "",
+      "rawChampionName": "game_character_displayname_Riven",
+      "respawnTimer": 0.0,
+      "riotId": "51华氏#57446",
+      "riotIdGameName": "51华氏",
+      "riotIdTagLine": "57446",
+      "runes": {
+        "keystone": {
+          "displayName": "迅捷步法",
+          "id": 8021,
+          "rawDescription": "perk_tooltip_FleetFootwork",
+          "rawDisplayName": "perk_displayname_FleetFootwork"
+        },
+        "primaryRuneTree": {
+          "displayName": "精密",
+          "id": 8000,
+          "rawDescription": "perkstyle_tooltip_7201",
+          "rawDisplayName": "perkstyle_displayname_7201"
+        },
+        "secondaryRuneTree": {
+          "displayName": "巫术",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "summonerName": "51华氏#57446",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "传送",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerTeleport_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerTeleport_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "闪现",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    }
+  ],
+  "events": {
+    "Events": []
+  },
+  "gameData": {
+    "gameMode": "PRACTICETOOL",
+    "gameTime": 0.02951510064303875,
+    "mapName": "Map11",
+    "mapNumber": 11,
+    "mapTerrain": "Default"
+  }
+}
+

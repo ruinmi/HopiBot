@@ -11,9 +11,11 @@ using HopiBot.Game;
 using HopiBot.LCU;
 using HopiBot.LCU.bo;
 using HopiBot.Enum;
+using HopiBot.Hack;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using Timer = System.Timers.Timer;
+using System.Windows.Controls;
 
 namespace HopiBot
 {
@@ -23,8 +25,9 @@ namespace HopiBot
         private Thread _botThread;
         private Client _client;
 
-        private int _xpOnStart = 0;
-        private int _xp = 0;
+        private int _previousXp = 0;
+        private int _xpUntilNextLevel = 0;
+        private int _earnedXp = 0;
 
         public MainWindow()
         {
@@ -45,8 +48,8 @@ namespace HopiBot
             ChampCb.ItemsSource = champs;
             ChampCb.SelectedItem = champs.Find(c => c.Name == "麦林炮手");
 
-            _xpOnStart = ClientApi.GetMyXp();
-            _xp = _xpOnStart;
+            _previousXp = ClientApi.GetMyXp();
+            _xpUntilNextLevel = ClientApi.GetMyXpUntilNextLevel();
 
             var hook = Hook.GlobalEvents();
             hook.KeyDown += (sender, e) =>
@@ -58,10 +61,8 @@ namespace HopiBot
 
                 if (e.KeyCode == Keys.U)
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        Logger.Log(ScoreService.CalculateAvgScore(ClientApi.GetMyPuuid()).ToString());
-                    });
+                    var tracker = new MiniMapTracker();
+                    tracker.Track();
                 }
             };
         }
@@ -89,22 +90,29 @@ namespace HopiBot
 
         private void UpdateInfo()
         {
-            _updateTimer = new Timer(500);
+            _updateTimer = new Timer(5000);
             _updateTimer.Elapsed += (sender, e) =>
             {
                 var phase = ClientApi.GetGamePhase();
                 if (phase == GamePhase.ChampSelect || phase == GamePhase.EndOfGame || phase == GamePhase.PreEndOfGame)
                 {
                     var currXp = ClientApi.GetMyXp();
-                    if (currXp == _xp) return;
+                    if (currXp == _previousXp) return;
+                    var earnedXpThisRound = currXp - _previousXp;
+                    if (currXp < _previousXp)
+                    {
+                        earnedXpThisRound = currXp + _xpUntilNextLevel;
+                    }
+                    _xpUntilNextLevel = ClientApi.GetMyXpUntilNextLevel();
+                    _earnedXp += earnedXpThisRound;
+                    _previousXp = currXp;
                     Dispatcher.Invoke(() =>
                     {
-                        LbXpEarnedLastRound.Content = (currXp - _xp).ToString();
-                        LbXpEarnedTotal.Content = (currXp - _xpOnStart).ToString();
-                        _xp = currXp;
+                        LbXpEarnedLastRound.Content = earnedXpThisRound.ToString();
+                        LbXpEarnedTotal.Content = _earnedXp.ToString();
                     });
                 }
-                Dispatcher.Invoke(() => GameStatusBlk.Text = phase.ToChinese());
+                // Dispatcher.Invoke(() => GameStatusBlk.Text = phase.ToChinese());
             };
             _updateTimer.Start();
         }
@@ -137,7 +145,7 @@ namespace HopiBot
                 _botThread = new Thread(() =>
                 {
                     _client = new Client(this);
-                    Dispatcher.Invoke(() => { _client.Champ = (Champion) ChampCb.SelectedItem; });
+                    Dispatcher.Invoke(() => { _client.Champ = (Champion)ChampCb.SelectedItem; });
                     _client.Start();
                 });
                 _botThread.Start();
@@ -148,7 +156,7 @@ namespace HopiBot
             }
         }
 
-        private void Stop()
+        public void Stop()
         {
             ChampCb.IsEnabled = true;
             StartupBtn.Content = "启动";
@@ -174,6 +182,40 @@ namespace HopiBot
             }
         }
 
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
         #endregion
+
+        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        {
+            ClientApi.CreatePracticeLobby();
+        }
+
+        private void Draw(object sender, RoutedEventArgs e)
+        {
+            MiniMapTracker tracker = new MiniMapTracker();
+            tracker.Track();
+        }
+
+        private void TestClick(object sender, RoutedEventArgs e)
+        {
+            if (_client != null)
+            {
+                System.Windows.Forms.MessageBox.Show(_client._roundLimit.ToString());
+                System.Windows.Forms.MessageBox.Show(_client._roundCount.ToString());
+            }
+        }
+
+        private void TextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            System.Windows.Controls.TextBox textBox = sender as System.Windows.Controls.TextBox;
+            if (textBox != null && _client != null)
+            {
+                _client._roundLimit = int.Parse(textBox.Text);
+            }
+        }
     }
 }
